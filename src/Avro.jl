@@ -1,4 +1,4 @@
-module Avro 
+module Avro
 
 include("Schema.jl")
 
@@ -22,7 +22,7 @@ typealias AvroLong    Union{BitLong_types...}
 typealias AvroFloat   Union{BitFloat_types...}
 typealias AvroDouble  Float64
 typealias AvroBytes   Array{UInt8, 1}
-typealias AvroString  UTF8String
+typealias AvroString  String
 
 function encode_int{T <: AvroInt}(stream::IOBuffer, value::T)
   n = (value << 1) $ (value >> 31)
@@ -91,7 +91,7 @@ write(stream::IOBuffer, value::AvroLong) = encode_long
 write(stream::IOBuffer, value::AvroFloat) = write
 write(stream::IOBuffer, value::AvroDouble) = write
 write(stream::IOBuffer, value::AvroBytes) = write(stream, value)
-function write(stream::IOBuffer, value::UTF8String)
+function write(stream::IOBuffer, value::String)
   write(stream, sizeof(value))
   write(stream, utf8(value))
 end
