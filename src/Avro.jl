@@ -1,5 +1,9 @@
 module Avro 
-export serialize
+
+include("Schema.jl")
+
+export Schemas,
+       serialize
 
 import Base.serialize
 
@@ -19,18 +23,6 @@ typealias AvroFloat   Union{BitFloat_types...}
 typealias AvroDouble  Float64
 typealias AvroBytes   Array{UInt8, 1}
 typealias AvroString  UTF8String
-
-"""
-Writes the string the stream as a UTF8 string
-"""
-function write_string(stream::IOBuffer, value::AbstractString)
-  write(stream, sizeof(value))
-  write(stream, utf8(value))
-end
-
-function write_fixed(stream::IOBuffer, value::ByteArray)
-  write(stream, value)
-end
 
 function encode_int{T <: AvroInt}(stream::IOBuffer, value::T)
   n = (value << 1) $ (value >> 31)
@@ -92,32 +84,25 @@ function encode_long{T <: AvroLong}(stream::IOBuffer, value::T)
   write(stream,  n)
 end
 
-function serialize(stream::IOBuffer, value::Any)
-  # If the type is a known primitive type
-  if isa(value, AvroNull)
-    # do nothing
-  elseif isa(value, AvroBoolean)
-    write(stream, value)
-  elseif isa(value, AvroInt)
-    encode_int(stream, value)
-  elseif isa(value, AvroLong)
-    encode_long(stream, value)
-  elseif isa(value, AvroFloat)
-    write(stream, value)
-  elseif isa(value, AvroDouble)
-    write(stream, value)
-  elseif isa(value, AvroBytes)
-    write_fixed(stream, value)
-  elseif isa(value, AbstractString)
-    write_string(stream, value)
-    return
-  end
+write(stream::IOBuffer, value::AvroNull) = nothing
+write(stream::IOBuffer, value::AvroBoolean) = write
+write(stream::IOBuffer, value::AvroInt) = encode_int
+write(stream::IOBuffer, value::AvroLong) = encode_long
+write(stream::IOBuffer, value::AvroFloat) = write
+write(stream::IOBuffer, value::AvroDouble) = write
+write(stream::IOBuffer, value::AvroBytes) = write(stream, value)
+function write(stream::IOBuffer, value::UTF8String)
+  write(stream, sizeof(value))
+  write(stream, utf8(value))
+end
 
+function write(stream::IOBuffer, value::Any)
   # Serialize each of the fields as a record type
   for fieldname in fieldnames(value)
-    field = getfield(value, fieldname)
-    serialize(stream, field)
+    field_value = getfield(value, fieldname)
+    write(stream, field_value)
   end
 end
+
 
 end
