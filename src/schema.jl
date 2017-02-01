@@ -157,7 +157,8 @@ function NamedSchema(json_data::Dict, context::ParseContext, typename::String)
 
     # Parse the optional aliases and doc
     doc = get(json_data, "doc", "")
-    aliases = Array{String}(get(json_data, "aliases", []))
+    alias_names = get(json_data, "aliases", [])
+    aliases = [FullName(name, context.space) for name in alias_names]
 
     # Return early if a schema with the given fullname already exists
     if haskey(context.schemas, fullname)
@@ -214,7 +215,7 @@ immutable Field
     # default::T
 
     order::Order
-    aliases::Vector{String}
+    aliases::Vector{FullName}
 end
 
 """
@@ -229,7 +230,8 @@ function Field(field_data::Dict, context::ParseContext, position::Int)
     # default = field_data["default"]
 
     order = Order(get(field_data, "order", "ascending"))
-    aliases = get(field_data, "aliases", [])
+    alias_names = get(field_data, "aliases", [])
+    aliases = [FullName(name, context.space) for name in alias_names]
 
     Field(name, position, schema, doc, order, aliases)
 end
@@ -240,11 +242,11 @@ A record schema.
 type RecordSchema <: NamedSchema
     fullname::FullName
     doc::String
-    aliases::Vector{String}
+    aliases::Vector{FullName}
     fields::Vector{Field}
 end
 
-function RecordSchema(fullname::FullName, doc::String, aliases::Vector{String})
+function RecordSchema(fullname::FullName, doc::String, aliases::Vector{FullName})
     RecordSchema(fullname, doc, aliases, Field[])
 end
 
@@ -256,7 +258,7 @@ function RecordSchema(
         context::ParseContext,
         fullname::FullName,
         doc::String,
-        aliases::Vector{String})
+        aliases::Vector{FullName})
     schema = RecordSchema(fullname, doc, aliases)
     context.schemas[fullname] = schema
 
@@ -278,7 +280,7 @@ immutable EnumSchema <: NamedSchema
     fullname::FullName
     doc::String # optional
     symbols::Vector{String}
-    aliases::Vector{String} # optional
+    aliases::Vector{FullName} # optional
 end
 
 """
@@ -289,7 +291,7 @@ function EnumSchema(
         context::ParseContext,
         fullname::FullName,
         doc::String,
-        aliases::Vector{String})
+        aliases::Vector{FullName})
     symbols = Array{String}(json_data["symbols"])
     schema = EnumSchema(fullname, doc, symbols, aliases)
     context.schemas[fullname] = schema
@@ -348,7 +350,7 @@ immutable FixedSchema <: NamedSchema
     fullname::FullName
     doc::String
     size::Int
-    aliases::Vector{String}
+    aliases::Vector{FullName}
 end
 
 """
@@ -359,7 +361,7 @@ function FixedSchema(
         context::ParseContext,
         fullname::FullName,
         doc::String,
-        aliases::Vector{String})
+        aliases::Vector{FullName})
     size = json_data["size"]
     schema = FixedSchema(fullname, doc, size, aliases)
     context.schemas[fullname] = schema
