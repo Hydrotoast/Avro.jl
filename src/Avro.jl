@@ -4,6 +4,6 @@ include("schema.jl")
 include("io.jl")
 
 export Schemas,
-       Codec
+       IO
 
 end

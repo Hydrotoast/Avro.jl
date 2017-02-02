@@ -7,7 +7,19 @@ import Base.fullname
 using Avro
 using JSON
 
-export PRIMITIVE_TYPES,
+export Schema,
+       NullSchema,
+       BooleanSchema,
+       StringSchema,
+       BytesSchema,
+       IntSchema,
+       LongSchema,
+       FloatSchema,
+       DoubleSchema,
+       RecordSchema,
+       EnumSchema,
+       FixedSchema,
+       PRIMITIVE_TYPES,
        parse_json
 
 """
@@ -41,7 +53,6 @@ const VALID_TYPES = [
     NAMED_TYPES;
     ["array", "map", "union"]
     ]
-
 
 capitalize(s::String) = string(uppercase(s[1]), s[2:end])
 
