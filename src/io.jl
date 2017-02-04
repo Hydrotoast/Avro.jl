@@ -1,3 +1,4 @@
+
 module IO
 
 import Base.write
@@ -118,11 +119,7 @@ encode(encoder::Encoder, value::Float64) = write(encoder.stream, value)
 encode(encoder::Encoder, value::UInt8) = write(encoder.stream, value)
 
 function encode(encoder::Encoder, value::String)
-    if value == ""
-        0
-    else
-        encode(encoder, sizeof(value)) + write(encoder.stream, value)
-    end
+    encode(encoder, sizeof(value)) + write(encoder.stream, value)
 end
 
 write(encoder::Encoder, schema::IntSchema, value::Int32) = encode(encoder, value)
@@ -136,6 +133,32 @@ function write(encoder::Encoder, schema::RecordSchema, value)
     for field in schema.fields
         write(encoder, field.schema, getfield(value, field.name))
     end
+end
+
+function write(encoder::Encoder, schema::EnumSchema, value::String)
+    index = findfirst(schema.symbols, value) - 1
+    encode(encoder, index % Int32)
+end
+
+function write{T}(encoder::Encoder, schema::ArraySchema, value::Vector{T})
+    encode(encoder, Int64(length(value)))
+    for item in value
+        write(encoder, schema.items, item)
+    end
+    encode(encoder, zero(Int32))
+end
+
+function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
+    encode(encoder, Int64(length(value)))
+    for (k, v) in value
+        encode(encoder, StringSchema(), k)
+        write(encoder, schema.values, v)
+    end
+    encode(encoder, zero(Int32))
+end
+
+function write(encoder::Encoder, schema::FixedSchema, value)
+    typeof(value).isbits ? encode(encoder, value) : 0
 end
 
 write(writer::DatumWriter, value) = write(writer.encoder, writer.schema, value)

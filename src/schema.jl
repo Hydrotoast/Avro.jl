@@ -19,6 +19,8 @@ export Schema,
        RecordSchema,
        EnumSchema,
        FixedSchema,
+       ArraySchema,
+       MapSchema,
        PRIMITIVE_TYPES,
        parse_json
 

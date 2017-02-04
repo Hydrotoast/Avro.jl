@@ -31,7 +31,7 @@ BOOLEAN_EXAMPLES = [
 
 STRING_EXAMPLES = [
     ("foo", [0x06, 0x66, 0x6f, 0x6f])
-    ("", [])
+    ("", [0x00])
 ]
 
 
