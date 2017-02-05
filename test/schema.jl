@@ -3,7 +3,7 @@ using Avro.Schemas
 const PRIMITIVE_EXAMPLES = [
     ["\"$type_name\"" for type_name in PRIMITIVE_TYPES];
     ["{\"type\": \"$type_name\"}" for type_name in PRIMITIVE_TYPES]
-]
+    ]
 
 const RECORD_EXAMPLES = [
     """
@@ -23,7 +23,7 @@ const RECORD_EXAMPLES = [
         ]
     }
     """
-]
+    ]
 
 ENUM_EXAMPLES = [
     """
@@ -33,7 +33,7 @@ ENUM_EXAMPLES = [
         "symbols": ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
     }
     """
-]
+    ]
 
 ARRAY_EXAMPLES = [
     """
@@ -42,7 +42,7 @@ ARRAY_EXAMPLES = [
         "items": "string"
     }
     """
-]
+    ]
 
 MAP_EXAMPLES = [
     """
@@ -51,11 +51,11 @@ MAP_EXAMPLES = [
         "values": "long"
     }
     """
-]
+    ]
 
 UNION_EXAMPLES = [
     "[\"null\", \"string\"]"
-]
+    ]
 
 FIXED_EXAMPLES = [
     """
@@ -65,7 +65,7 @@ FIXED_EXAMPLES = [
         "size": 256
     }
     """
-]
+    ]
 
 @testset "Parsing schemas" begin
     @testset "Primitive" for example in PRIMITIVE_EXAMPLES
