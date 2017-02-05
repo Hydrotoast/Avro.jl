@@ -46,7 +46,7 @@ const ARRAY_EXAMPLES =
     [
         (
             Int64[3, 27], 
-            Schemas.ArraySchema(Schemas.long), 
+            Schemas.ArraySchema(Schemas.LONG), 
             [0x04, 0x06, 0x36, 0x00]
         )
     ]
@@ -55,7 +55,7 @@ const MAP_EXAMPLES =
     [
         (
             Dict{String, Int64}("bar" => 27, "foo" => 3),
-            Schemas.MapSchema(Schemas.long),
+            Schemas.MapSchema(Schemas.LONG),
             [0x04, 0x06, 0x62, 0x61, 0x72, 0x36, 0x06, 0x66, 0x6f, 0x6f, 0x06, 0x00]
         )
     ]

@@ -10,8 +10,8 @@ const TEST_RECORD_SCHEMA =
     Schemas.RecordSchema(
         Schemas.FullName("test"),
         [
-            Schemas.Field("a", 1, Schemas.long),
-            Schemas.Field("b", 2, Schemas.string)
+            Schemas.Field("a", 1, Schemas.LONG),
+            Schemas.Field("b", 2, Schemas.STRING)
         ]
     )
 
@@ -24,10 +24,7 @@ const RECORD_EXAMPLES =
     ]
 
 const TEST_ENUM_SCHEMA =
-    Schemas.EnumSchema(
-        Schemas.FullName("Foo"),
-        ["A", "B", "C", "D"]
-    )
+    Schemas.EnumSchema(Schemas.FullName("Foo"), ["A", "B", "C", "D"])
 
 const ENUM_EXAMPLES =
     [

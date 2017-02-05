@@ -85,7 +85,7 @@ for primitive_type in PRIMITIVE_TYPES
         immutable $(classname) <: PrimitiveSchema
         end
     end
-    @eval const $(Symbol(primitive_type)) = $(classname)()
+    @eval const $(Symbol(uppercase(primitive_type))) = $(classname)()
 end
 
 function create_primitive(typename::String)
