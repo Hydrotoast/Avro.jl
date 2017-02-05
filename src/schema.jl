@@ -76,11 +76,13 @@ The parent of the Avro Schema hierarchy.
 """
 abstract Schema
 
+abstract PrimitiveSchema <: Schema
+
 # Generate the primitive type schemas
 for primitive_type in PRIMITIVE_TYPES
     classname = Symbol(capitalize(primitive_type), "Schema")
     @eval begin
-        immutable $(classname) <: Schema
+        immutable $(classname) <: PrimitiveSchema
         end
     end
 end
@@ -113,9 +115,6 @@ A fully qualified name in Avro.
 immutable FullName
     value::String
 end
-
-==(fullname1::FullName, fullname2::FullName) = fullname1.value == fullname2.value
-hash(fullname::FullName) = hash(fullname.value)
 
 """
 Construct a fullname from a name and space.
@@ -439,5 +438,24 @@ function parse_json(json_string::String)
     context = ParseContext("", Dict())
     parse_schema(json_data, context)
 end
+
+""" 
+Equality definitions for fullnames.
+"""
+==(fullname1::FullName, fullname2::FullName) = fullname1.value == fullname2.value
+hash(fullname::FullName) = hash(fullname.value)
+
+"""
+Equality definitions for schemas.
+"""
+=={A <: Schema}(::A, b) = false
+=={A <: Schema}(b, ::A) = false
+=={A <: PrimitiveSchema}(::A, ::A) = true 
+==(a::RecordSchema, b::RecordSchema) = a.fullname == b.fullname
+==(a::EnumSchema, b::EnumSchema) = a.fullname == b.fullname && a.symbols == y.symbols
+==(a::ArraySchema, b::ArraySchema) = a.items == b.items
+==(a::MapSchema, b::MapSchema) = a.values == b.values
+==(a::UnionSchema, b::UnionSchema) = a.schemas == b.schemas
+==(a::FixedSchema, b::FixedSchema) = a.fullname == b.fullname && a.size == b.size
 
 end
