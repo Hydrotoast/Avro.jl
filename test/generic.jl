@@ -23,11 +23,31 @@ const RECORD_EXAMPLES =
         )
     ]
 
+const TEST_ENUM_SCHEMA =
+    Schemas.EnumSchema(
+        Schemas.FullName("Foo"),
+        ["A", "B", "C", "D"]
+    )
+
+const ENUM_EXAMPLES =
+    [
+        (GenericEnumSymbol(TEST_ENUM_SCHEMA, "A"), [0x00]),
+        (GenericEnumSymbol(TEST_ENUM_SCHEMA, "D"), [0x06])
+    ]
+
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
 
 @testset "Generic writers" begin
     @testset "Record" for (input, expected) in RECORD_EXAMPLES
+        bytes_written = write(encoder, input.schema, input)
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
+
+    @testset "Enum" for (input, expected) in ENUM_EXAMPLES
         bytes_written = write(encoder, input.schema, input)
         contents = takebuf_array(buffer)
 
