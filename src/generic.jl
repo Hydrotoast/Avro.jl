@@ -4,6 +4,7 @@ using Avro.Schemas
 using Avro.Io
 
 import Avro.Io.write
+import Base: getindex, setindex!
 
 export GenericRecord,
        GenericEnumSymbol,
@@ -22,23 +23,21 @@ function put(record::GenericRecord, key::Symbol, v)
     record.values[field.position] = v
 end
 
-function put(record::GenericRecord, i::Int, v)
-    record.values[i] = v
-end
+put(record::GenericRecord, v, i::Int) = record[i] = v
+setindex!(record::GenericRecord, v, i::Int) = record.values[i] = v
 
 function get(record::GenericRecord, key::Symbol)
     field = findfirst(field -> field.name == key, record.schema.fields)
     record.values[field.position]
 end
 
-function get(record::GenericRecord, i::Int)
-    record.values[i]
-end
+get(record::GenericRecord, i::Int) = record[i]
+getindex(record::GenericRecord, i::Int) = record.values[i]
 
 function write(encoder::Encoder, schema::RecordSchema, datum::GenericRecord)
     bytes_written = 0
     for field in schema.fields
-        bytes_written += write(encoder, field.schema, get(datum, field.position))
+        bytes_written += write(encoder, field.schema, datum[field.position])
     end
     bytes_written
 end
