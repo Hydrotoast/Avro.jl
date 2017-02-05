@@ -2,10 +2,12 @@ module Avro
 
 include("schema.jl")
 include("io.jl")
+include("generic.jl")
 include("file.jl")
 
-export Io,
-       Schemas,
+export Schemas,
+       Io,
+       Generic,
        File
 
 function create_binary(f::Function, schema::Schemas.Schema, output::IO)

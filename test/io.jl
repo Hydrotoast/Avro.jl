@@ -43,21 +43,6 @@ type Test
     b::String
 end
 
-const RECORD_EXAMPLES = [
-    (
-        Test(Int64(27), "foo"), 
-        Schemas.RecordSchema(
-            Schemas.FullName("test"),
-            [
-                Schemas.Field("a", 1, Schemas.long),
-                Schemas.Field("b", 2, Schemas.string)
-            ]
-        ),
-        [0x36, 0x06, 0x66, 0x6f, 0x6f]
-    )
-]
-
-
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
 
@@ -88,14 +73,6 @@ encoder = BinaryEncoder(buffer)
 
     @testset "String" for (input, expected) in STRING_EXAMPLES
         bytes_written = encode(encoder, input)
-        contents = takebuf_array(buffer)
-
-        @test expected == contents
-        @test length(expected) == bytes_written
-    end
-
-    @testset "Record" for (input, schema, expected) in RECORD_EXAMPLES
-        bytes_written = write(encoder, schema, input)
         contents = takebuf_array(buffer)
 
         @test expected == contents
