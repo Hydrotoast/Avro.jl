@@ -22,7 +22,7 @@ export Schema,
        ArraySchema,
        MapSchema,
        PRIMITIVE_TYPES,
-       parse_json
+       parse
 
 """
 The set of builtin types.
@@ -428,7 +428,7 @@ end
 """
 Parse a schema object from a JSON string.
 """
-function parse_json(json_string::String)
+function parse(json_string::String)
     json_data = JSON.parse(json_string)
 
     # Three cases:

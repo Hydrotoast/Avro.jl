@@ -69,30 +69,30 @@ FIXED_EXAMPLES = [
 
 @testset "Parsing schemas" begin
     @testset "Primitive" for example in PRIMITIVE_EXAMPLES
-        parse_json(example)
+        Avro.parse(example)
     end
 
     @testset "Record" for example in RECORD_EXAMPLES
-        parse_json(example)
+        Avro.parse(example)
     end
 
     @testset "Enum" for example in ENUM_EXAMPLES
-        parse_json(example)
+        Avro.parse(example)
     end
 
     @testset "Array" for example in ARRAY_EXAMPLES
-        parse_json(example)
+        Avro.parse(example)
     end
 
     @testset "Map" for example in MAP_EXAMPLES
-        parse_json(example)
+        Avro.parse(example)
     end
 
     @testset "Union" for example in UNION_EXAMPLES
-        parse_json(example)
+        Avro.parse(example)
     end
 
     @testset "Fixed" for example in FIXED_EXAMPLES
-        parse_json(example)
+        Avro.parse(example)
     end
 end
