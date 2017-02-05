@@ -88,23 +88,23 @@ for primitive_type in PRIMITIVE_TYPES
     @eval const $(Symbol(uppercase(primitive_type))) = $(classname)()
 end
 
-function create_primitive(typename::String)
+function PrimitiveSchema(typename::String)
     if typename == "null"
-        return Schema.null
+        return NULL
     elseif typename == "boolean"
-        return Schema.boolean
+        return BOOLEAN
     elseif typename == "string"
-        return Schema.string
+        return STRING
     elseif typename == "bytes"
-        return Schema.bytes
+        return BYTES
     elseif typename == "int"
-        return Schema.int
+        return INT
     elseif typename == "long"
-        return Schema.long
+        return LONG
     elseif typename == "float"
-        return Schema.float
+        return FLOAT
     elseif typename == "double"
-        return Schema.double
+        return DOUBLE
     else
         throw(Exception("Invalid schema typename"))
     end
@@ -422,7 +422,7 @@ function parse_schema(json_data::Dict, context::ParseContext)
     # Throws KeyError if not found
     typename = get_required(json_data, "type", "No type")
     if typename in PRIMITIVE_TYPES
-        create_primitive(typename)
+        PrimitiveSchema(typename)
     elseif typename in NAMED_TYPES
         NamedSchema(json_data, context, typename)
     elseif typename in VALID_TYPES
