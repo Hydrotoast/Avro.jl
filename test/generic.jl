@@ -10,8 +10,8 @@ const TEST_RECORD_SCHEMA =
     Schemas.RecordSchema(
         Schemas.FullName("test"),
         [
-            Schemas.Field("a", 1, Schemas.LONG),
-            Schemas.Field("b", 2, Schemas.STRING)
+            Schemas.Field("a", 0, Schemas.LONG),
+            Schemas.Field("b", 1, Schemas.STRING)
         ]
     )
 

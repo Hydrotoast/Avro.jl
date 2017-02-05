@@ -297,7 +297,7 @@ function RecordSchema(
     json_fields = json_data["fields"]
     fields = Array(Field, length(json_fields))
     for (i, json_field) in enumerate(json_fields)
-        fields[i] = Field(json_field, context, i)
+        fields[i] = Field(json_field, context, i - 1)
     end
     schema.fields = fields
 

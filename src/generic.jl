@@ -20,24 +20,24 @@ end
 
 function put(record::GenericRecord, key::Symbol, v)
     field = findfirst(field -> field.name == key, record.schema.fields)
-    record.values[field.position] = v
+    record.values[field.position + 1] = v
 end
 
-put(record::GenericRecord, v, i::Int) = record[i] = v
+put(record::GenericRecord, v, i::Int) = record[i + 1] = v
 setindex!(record::GenericRecord, v, i::Int) = record.values[i] = v
 
 function get(record::GenericRecord, key::Symbol)
     field = findfirst(field -> field.name == key, record.schema.fields)
-    record.values[field.position]
+    record.values[field.position + 1]
 end
 
-get(record::GenericRecord, i::Int) = record[i]
+get(record::GenericRecord, i::Int) = record[i + 1]
 getindex(record::GenericRecord, i::Int) = record.values[i]
 
 function write(encoder::Encoder, schema::RecordSchema, datum::GenericRecord)
     bytes_written = 0
     for field in schema.fields
-        bytes_written += write(encoder, field.schema, datum[field.position])
+        bytes_written += write(encoder, field.schema, datum[field.position + 1])
     end
     bytes_written
 end
