@@ -5,6 +5,7 @@ import Base.fullname
 import Base.hash
 import Base.show
 
+using Avro.Common
 using JSON
 
 export Schema,
@@ -55,8 +56,6 @@ const VALID_TYPES = [
     NAMED_TYPES;
     ["array", "map", "union"]
     ]
-
-capitalize(s::String) = string(uppercase(s[1]), s[2:end])
 
 function get_required(data::Dict, key::String, error_message::String)
     get(data, key) do
