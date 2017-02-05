@@ -7,7 +7,7 @@ using Base.Test
 const BOOLEAN_EXAMPLES = [
     (true, [0x01]),
     (false, [0x00]),
-]
+    ]
 
 const INT_EXAMPLES = [
     (Int32(0), [0x00]),
@@ -19,7 +19,7 @@ const INT_EXAMPLES = [
     (Int32(64), [0x80, 0x01]),
     (Int32(8192), [0x80, 0x80, 0x01]),
     (Int32(-8193), [0x81, 0x80, 0x01]),
-]
+    ]
 
 const LONG_EXAMPLES = [
     (Int64(0), [0x00]),
@@ -31,12 +31,12 @@ const LONG_EXAMPLES = [
     (Int64(64), [0x80, 0x01]),
     (Int64(8192), [0x80, 0x80, 0x01]),
     (Int64(-8193), [0x81, 0x80, 0x01]),
-]
+    ]
 
 const STRING_EXAMPLES = [
     ("foo", [0x06, 0x66, 0x6f, 0x6f])
     ("", [0x00])
-]
+    ]
 
 type Test
     a::Int64
