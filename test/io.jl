@@ -48,11 +48,9 @@ const RECORD_EXAMPLES = [
         Test(Int64(27), "foo"), 
         Schemas.RecordSchema(
             Schemas.FullName("test"),
-            "",
-            [],
             [
-                Schemas.Field("a", 0, Schemas.long, "", Schemas.Order("ASCENDING"), []), 
-                Schemas.Field("b", 1, Schemas.string, "", Schemas.Order("ASCENDING"), [])
+                Schemas.Field("a", 1, Schemas.long),
+                Schemas.Field("b", 2, Schemas.string)
             ]
         ),
         [0x36, 0x06, 0x66, 0x6f, 0x6f]

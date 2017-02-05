@@ -223,13 +223,23 @@ immutable Field
     name::String
     position::Int
     schema::Schema
-    doc::String
 
     # TODO
     # default::T
 
+    doc::String
     order::Order
     aliases::Vector{FullName}
+end
+
+function Field(
+        name::String,
+        position::Int,
+        schema::Schema;
+        doc::String = "",
+        order::Order = Ascending,
+        aliases::Vector{FullName} = FullName[])
+    Field(name, position, schema, doc, order, aliases)
 end
 
 """
@@ -255,9 +265,17 @@ A record schema.
 """
 type RecordSchema <: NamedSchema
     fullname::FullName
+    fields::Vector{Field}
     doc::String
     aliases::Vector{FullName}
-    fields::Vector{Field}
+end
+
+function RecordSchema(
+        fullname::FullName,
+        fields::Vector{Field};
+        doc::String = "",
+        aliases::Vector{FullName} = FullName[])
+    RecordSchema(fullname, fields, doc, aliases)
 end
 
 function RecordSchema(fullname::FullName, doc::String, aliases::Vector{FullName})
@@ -292,9 +310,17 @@ An enum schema.
 """
 immutable EnumSchema <: NamedSchema
     fullname::FullName
-    doc::String # optional
     symbols::Vector{String}
+    doc::String # optional
     aliases::Vector{FullName} # optional
+end
+
+function EnumSchema(
+        fullname::FullName,
+        symbols::Vector{String};
+        doc::String = "",
+        aliases::Vector{FullName} = FullName[])
+    EnumSchema(fullname, symbols, doc, aliases)
 end
 
 """
@@ -307,7 +333,7 @@ function EnumSchema(
         doc::String,
         aliases::Vector{FullName})
     symbols = Array{String}(json_data["symbols"])
-    schema = EnumSchema(fullname, doc, symbols, aliases)
+    schema = EnumSchema(fullname, symbols, doc, aliases)
     context.schemas[fullname] = schema
     schema
 end
@@ -362,9 +388,17 @@ A fixed schema.
 """
 immutable FixedSchema <: NamedSchema
     fullname::FullName
-    doc::String
     size::Int
+    doc::String
     aliases::Vector{FullName}
+end
+
+function FixedSchema(
+        fullname::FullName,
+        size::Int;
+        doc::String = "",
+        aliases::Vector{FullName} = FullName[])
+    FixedSchema(fullname, size, doc, aliases)
 end
 
 """
@@ -377,7 +411,7 @@ function FixedSchema(
         doc::String,
         aliases::Vector{FullName})
     size = json_data["size"]
-    schema = FixedSchema(fullname, doc, size, aliases)
+    schema = FixedSchema(fullname, size, doc, aliases)
     context.schemas[fullname] = schema
     schema
 end
