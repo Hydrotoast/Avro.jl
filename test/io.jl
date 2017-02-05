@@ -1,6 +1,10 @@
-using Avro.IO
+module IOTest
 
-INT_EXAMPLES = [
+using Avro.IO
+using Avro.Schemas
+using Base.Test
+
+const INT_EXAMPLES = [
     (Int32(0), [0x00]),
     (Int32(-1), [0x01]),
     (Int32(1), [0x02]),
@@ -12,7 +16,7 @@ INT_EXAMPLES = [
     (Int32(-8193), [0x81, 0x80, 0x01]),
 ]
 
-LONG_EXAMPLES = [
+const LONG_EXAMPLES = [
     (Int64(0), [0x00]),
     (Int64(-1), [0x01]),
     (Int64(1), [0x02]),
@@ -24,14 +28,35 @@ LONG_EXAMPLES = [
     (Int64(-8193), [0x81, 0x80, 0x01]),
 ]
 
-BOOLEAN_EXAMPLES = [
+const BOOLEAN_EXAMPLES = [
     (true, [0x01]),
     (false, [0x00]),
 ]
 
-STRING_EXAMPLES = [
+const STRING_EXAMPLES = [
     ("foo", [0x06, 0x66, 0x6f, 0x6f])
     ("", [0x00])
+]
+
+type Test
+    a::Int64
+    b::String
+end
+
+const RECORD_EXAMPLES = [
+    (
+        Test(Int64(27), "foo"), 
+        Schemas.RecordSchema(
+            Schemas.FullName("test"),
+            "",
+            [],
+            [
+                Schemas.Field("a", 0, Schemas.long, "", Schemas.Order("ASCENDING"), []), 
+                Schemas.Field("b", 1, Schemas.string, "", Schemas.Order("ASCENDING"), [])
+            ]
+        ),
+        [0x36, 0x06, 0x66, 0x6f, 0x6f]
+    )
 ]
 
 
@@ -70,4 +95,14 @@ encoder = BinaryEncoder(buffer)
         @test expected == contents
         @test length(expected) == bytes_written
     end
+
+    @testset "Record" for (input, schema, expected) in RECORD_EXAMPLES
+        bytes_written = write(encoder, schema, input)
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
+end
+
 end
