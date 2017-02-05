@@ -3,7 +3,7 @@ module Schemas
 import Base.==
 import Base.fullname
 import Base.hash
-import Base.string
+import Base.show
 
 using JSON
 
@@ -492,5 +492,67 @@ Equality definitions for schemas.
 ==(a::MapSchema, b::MapSchema) = a.values == b.values
 ==(a::UnionSchema, b::UnionSchema) = a.schemas == b.schemas
 ==(a::FixedSchema, b::FixedSchema) = a.fullname == b.fullname && a.size == b.size
+
+"""
+Show definitions for schemas to show them as JSON.
+"""
+show(io::IO, name::FullName) = write(io, "\"$(name.value)\"")
+
+for primitive_type in PRIMITIVE_TYPES
+    primitive_json = "\"$primitive_type\""
+    classname = Symbol(capitalize(primitive_type), "Schema")
+    @eval begin
+        show(io::IO, ::$classname) = print(io, $primitive_json)
+    end
+end
+
+function show(io::IO, field::Field)
+    write(io, "{\"name\":$(field.name),\"type\":")
+    write(io, field.schema)
+    write(io, "}")
+end
+
+function show(io::IO, schema::RecordSchema)
+    write(io, "{\"name\":")
+    show(io, schema.fullname)
+    write(io, ",\"type\":\"record\",\"fields\":[")
+    show(io, schema.fields[1])
+    for field in schema.fields[2:end]
+        show(io, ",")
+        show(io, field)
+    end
+    write(io, "]}")
+end
+
+function show(io::IO, schema::EnumSchema)
+    write(io, "{\"name\":")
+    show(io, schema.fullname)
+    write(io, ",\"type\":\"enum\",\"symbols\":[")
+    write(io, join(["\"$symbol\"" for smybol in schema.symbols], ","))
+    write(io, "]}")
+end
+
+function show(io::IO, schema::ArraySchema)
+    write(io, "{type\":\"array\",\"items\":")
+    show(io, schema.items)
+    write(io, "}")
+end
+
+function show(io::IO, schema::MapSchema)
+    write(io, "{type\":\"map\",\"values\":")
+    show(io, schema.values)
+    write(io, "}")
+end
+
+function show(io::IO, schema::UnionSchema)
+    names = join([item -> item.fullname.value for item in schema.schemas], ",")
+    write(io, "[$names]")
+end
+
+function show(io::IO, schema::FixedSchema)
+    write(io, "{\"name\":")
+    show(io, schema.fullname)
+    write(io, ",\"type\":\"fixed\",\"size\":$(schema.size)}")
+end
 
 end
