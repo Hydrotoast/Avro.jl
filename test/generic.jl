@@ -35,6 +35,14 @@ const ENUM_EXAMPLES =
         (GenericEnumSymbol(TEST_ENUM_SCHEMA, "D"), [0x06])
     ]
 
+const TEST_FIXED_SCHEMA = Schemas.FixedSchema(Schemas.FullName("md5"), 2)
+
+const FIXED_EXAMPLES =
+    [
+        (GenericFixed(TEST_FIXED_SCHEMA, [0x01, 0x02]), [0x01, 0x02])
+        (GenericFixed(TEST_FIXED_SCHEMA, [0xAA, 0xBB]), [0xAA, 0xBB])
+    ]
+
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
 
@@ -48,6 +56,14 @@ encoder = BinaryEncoder(buffer)
     end
 
     @testset "Enum" for (input, expected) in ENUM_EXAMPLES
+        bytes_written = write(encoder, input.schema, input)
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
+
+    @testset "Fixed" for (input, expected) in FIXED_EXAMPLES
         bytes_written = write(encoder, input.schema, input)
         contents = takebuf_array(buffer)
 

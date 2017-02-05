@@ -58,12 +58,12 @@ end
 """
 Contains data for Avro fixed objects.
 """
-immutable GenericFixed{N}
+immutable GenericFixed
     schema::FixedSchema
     bytes::Vector{UInt8}
 end
 
-function write{N}(encoder::Encoder, schema::FixedSchema, datum::GenericFixed{N})
+function write(encoder::Encoder, schema::FixedSchema, datum::GenericFixed)
     encode(encoder, datum.bytes)
 end
 
