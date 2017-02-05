@@ -278,7 +278,7 @@ function RecordSchema(
 end
 
 function RecordSchema(fullname::FullName, doc::String, aliases::Vector{FullName})
-    RecordSchema(fullname, doc, aliases, Field[])
+    RecordSchema(fullname, Field[], doc, aliases)
 end
 
 """
@@ -450,7 +450,7 @@ Parse a schema object from a parsed JSON string.
 function parse_schema(schema_data::String, context::ParseContext)
     if schema_data in PRIMITIVE_TYPES
         # Choose the primitive schema based on the type name
-        create_primitive(schema_data)
+        PrimitiveSchema(schema_data)
     else
         fullname = FullName(schema_data, context.space)
         get(context.schemas, fullname) do
@@ -545,8 +545,13 @@ function show(io::IO, schema::MapSchema)
 end
 
 function show(io::IO, schema::UnionSchema)
-    names = join([item -> item.fullname.value for item in schema.schemas], ",")
-    write(io, "[$names]")
+    write(io, "[")
+    show(io, schema.schemas[1])
+    for item in schema.schemas[2:end]
+        write(io, ",")
+        show(io, item)
+    end
+    write(io, "]")
 end
 
 function show(io::IO, schema::FixedSchema)
