@@ -10,7 +10,7 @@ schema_filename = "user.avsc"
 output_filename = "users.avro"
 
 # Parse the schema
-schema = open(schema_filename, "r) do file
+schema = open(schema_filename, "r") do file
   Avro.parse(readstring(file))
 end
 
