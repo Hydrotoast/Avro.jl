@@ -48,6 +48,9 @@ immutable DatumReader
     schema::Schema
 end
 
+encode(encoder::BinaryEncoder, value::Void) = 0
+encode(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
+
 function encode(encoder::BinaryEncoder, value::Int32)
     stream = encoder.stream
     bytes_written = 0
@@ -112,7 +115,6 @@ function encode(encoder::BinaryEncoder, value::Int64)
     bytes_written
 end
 
-encode(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
 encode(encoder::BinaryEncoder, value::Float32) = write(encoder.stream, value)
 encode(encoder::BinaryEncoder, value::Float64) = write(encoder.stream, value)
 encode(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
@@ -121,13 +123,14 @@ function encode(encoder::BinaryEncoder, value::String)
     encode(encoder, sizeof(value)) + write(encoder.stream, value)
 end
 
+write(encoder::BinaryEncoder, schema::NullSchema, value::Void) = encode(encoder, value)
+write(encoder::BinaryEncoder, schema::BooleanSchema, value::Bool) = encode(encoder, value)
 write(encoder::BinaryEncoder, schema::IntSchema, value::Int32) = encode(encoder, value)
 write(encoder::BinaryEncoder, schema::LongSchema, value::Int64) = encode(encoder, value)
 write(encoder::BinaryEncoder, schema::FloatSchema, value::Float32) = encode(encoder, value)
 write(encoder::BinaryEncoder, schema::DoubleSchema, value::Float64) = encode(encoder, value)
-write(encoder::BinaryEncoder, schema::BooleanSchema, value::Bool) = encode(encoder, value)
+write(encoder::BinaryEncoder, schema::BytesSchema, value::Vector{UInt8}) = encode(encoder, value)
 write(encoder::BinaryEncoder, schema::StringSchema, value::String) = encode(encoder, value)
-write(encoder::BinaryEncoder, schema::NullSchema, value::Void) = encode(encoder, value)
 
 function write(encoder::BinaryEncoder, schema::RecordSchema, value)
     bytes_written = 0

@@ -4,6 +4,11 @@ using Avro.IO
 using Avro.Schemas
 using Base.Test
 
+const BOOLEAN_EXAMPLES = [
+    (true, [0x01]),
+    (false, [0x00]),
+]
+
 const INT_EXAMPLES = [
     (Int32(0), [0x00]),
     (Int32(-1), [0x01]),
@@ -26,11 +31,6 @@ const LONG_EXAMPLES = [
     (Int64(64), [0x80, 0x01]),
     (Int64(8192), [0x80, 0x80, 0x01]),
     (Int64(-8193), [0x81, 0x80, 0x01]),
-]
-
-const BOOLEAN_EXAMPLES = [
-    (true, [0x01]),
-    (false, [0x00]),
 ]
 
 const STRING_EXAMPLES = [

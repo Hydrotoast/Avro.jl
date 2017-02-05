@@ -31,12 +31,12 @@ The set of builtin types.
 const PRIMITIVE_TYPES = [
     "null",
     "boolean",
-    "string",
-    "bytes",
     "int",
     "long",
     "float",
-    "double"
+    "double",
+    "bytes",
+    "string"
     ]
 
 """
@@ -45,7 +45,7 @@ The set of named types.
 const NAMED_TYPES = [
     "record",
     "enum",
-    "fixed",
+    "fixed"
     ]
 
 """
