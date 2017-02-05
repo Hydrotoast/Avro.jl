@@ -1,8 +1,9 @@
 module Schemas
 
 import Base.==
-import Base.hash
 import Base.fullname
+import Base.hash
+import Base.string
 
 using Avro
 using JSON
@@ -85,25 +86,26 @@ for primitive_type in PRIMITIVE_TYPES
         immutable $(classname) <: PrimitiveSchema
         end
     end
+    @eval const $(Symbol(primitive_type)) = $(classname)()
 end
 
 function create_primitive(typename::String)
     if typename == "null"
-        return NullSchema()
+        return Schema.null
     elseif typename == "boolean"
-        return BooleanSchema()
+        return Schema.boolean
     elseif typename == "string"
-        return StringSchema()
+        return Schema.string
     elseif typename == "bytes"
-        return BytesSchema()
+        return Schema.bytes
     elseif typename == "int"
-        return IntSchema()
+        return Schema.int
     elseif typename == "long"
-        return LongSchema()
+        return Schema.long
     elseif typename == "float"
-        return FloatSchema()
+        return Schema.float
     elseif typename == "double"
-        return DoubleSchema()
+        return Schema.double
     else
         throw(Exception("Invalid schema typename"))
     end

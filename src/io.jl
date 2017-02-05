@@ -1,4 +1,3 @@
-
 module IO
 
 import Base.write
@@ -151,7 +150,7 @@ end
 function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
     encode(encoder, Int64(length(value)))
     for (k, v) in value
-        encode(encoder, StringSchema(), k)
+        encode(encoder, Schemas.string, k)
         write(encoder, schema.values, v)
     end
     encode(encoder, zero(Int32))
