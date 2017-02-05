@@ -508,7 +508,7 @@ end
 
 function show(io::IO, field::Field)
     write(io, "{\"name\":$(field.name),\"type\":")
-    write(io, field.schema)
+    show(io, field.schema)
     write(io, "}")
 end
 
