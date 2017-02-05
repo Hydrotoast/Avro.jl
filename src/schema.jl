@@ -5,7 +5,6 @@ import Base.fullname
 import Base.hash
 import Base.string
 
-using Avro
 using JSON
 
 export Schema,

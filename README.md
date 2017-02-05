@@ -4,7 +4,7 @@
 
 ```julia
 using Avro
-using Avro.IO
+using Avro.File
 
 schema_filename = "user.avsc"
 output_filename = "users.avro"

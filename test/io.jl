@@ -1,6 +1,6 @@
-module IOTest
+module IoTest
 
-using Avro.IO
+using Avro.Io
 using Avro.Schemas
 using Base.Test
 

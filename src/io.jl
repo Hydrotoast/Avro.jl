@@ -1,4 +1,4 @@
-module IO
+module Io
 
 import Base.write
 
@@ -20,14 +20,14 @@ abstract Decoder
 Writes binary data of builtin and primtive types to an output stream.
 """
 immutable BinaryEncoder <: Encoder
-    stream::IOBuffer
+    stream::IO
 end
 
 """
 Reads data of simple and primitive types from an input stream.
 """
 immutable BinaryDecoder <: Decoder
-    stream::IOBuffer
+    stream::IO
 end
 
 """
