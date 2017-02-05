@@ -148,7 +148,7 @@ end
 function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
     bytes_written = encode(encoder, Int64(length(value)))
     for (k, v) in value
-        bytes_written += encode(encoder, Schemas.string, k)
+        bytes_written += encode(encoder, k)
         bytes_written += write(encoder, schema.values, v)
     end
     bytes_written += encode(encoder, zero(UInt8))
