@@ -67,37 +67,32 @@ FIXED_EXAMPLES = [
     """
 ]
 
-info("Test parsing primitive examples")
-for example in PRIMITIVE_EXAMPLES
-    parse_json(example)
-end
+@testset "Parsing schemas" begin
+    @testset "Primitive" for example in PRIMITIVE_EXAMPLES
+        parse_json(example)
+    end
 
-info("Test parsing record examples")
-for example in RECORD_EXAMPLES
-    parse_json(example)
-end
+    @testset "Record" for example in RECORD_EXAMPLES
+        parse_json(example)
+    end
 
-info("Test parsing enum examples")
-for example in ENUM_EXAMPLES
-    parse_json(example)
-end
+    @testset "Enum" for example in ENUM_EXAMPLES
+        parse_json(example)
+    end
 
-info("Test parsing array examples")
-for example in ARRAY_EXAMPLES
-    parse_json(example)
-end
+    @testset "Array" for example in ARRAY_EXAMPLES
+        parse_json(example)
+    end
 
-info("Test parsing map examples")
-for example in MAP_EXAMPLES
-    parse_json(example)
-end
+    @testset "Map" for example in MAP_EXAMPLES
+        parse_json(example)
+    end
 
-info("Test parsing union examples")
-for example in UNION_EXAMPLES
-    parse_json(example)
-end
+    @testset "Union" for example in UNION_EXAMPLES
+        parse_json(example)
+    end
 
-info("Test parsing fixed examples")
-for example in FIXED_EXAMPLES
-    parse_json(example)
+    @testset "Fixed" for example in FIXED_EXAMPLES
+        parse_json(example)
+    end
 end

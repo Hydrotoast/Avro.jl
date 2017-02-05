@@ -38,34 +38,36 @@ STRING_EXAMPLES = [
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
 
-for (input, expected) in INT_EXAMPLES
-    bytes_written = encode(encoder, input)
-    contents = takebuf_array(buffer)
+@testset "Encoding" begin
+    @testset "Integer" for (input, expected) in INT_EXAMPLES
+        bytes_written = encode(encoder, input)
+        contents = takebuf_array(buffer)
 
-    @test expected == contents
-    @test length(expected) == bytes_written
-end
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
 
-for (input, expected) in LONG_EXAMPLES
-    bytes_written = encode(encoder, input)
-    contents = takebuf_array(buffer)
+    @testset "Long" for (input, expected) in LONG_EXAMPLES
+        bytes_written = encode(encoder, input)
+        contents = takebuf_array(buffer)
 
-    @test expected == contents
-    @test length(expected) == bytes_written
-end
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
 
-for (input, expected) in BOOLEAN_EXAMPLES
-    bytes_written = encode(encoder, input)
-    contents = takebuf_array(buffer)
+    @testset "Boolean" for (input, expected) in BOOLEAN_EXAMPLES
+        bytes_written = encode(encoder, input)
+        contents = takebuf_array(buffer)
 
-    @test expected == contents
-    @test length(expected) == bytes_written
-end
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
 
-for (input, expected) in STRING_EXAMPLES
-    bytes_written = encode(encoder, input)
-    contents = takebuf_array(buffer)
+    @testset "String" for (input, expected) in STRING_EXAMPLES
+        bytes_written = encode(encoder, input)
+        contents = takebuf_array(buffer)
 
-    @test expected == contents
-    @test length(expected) == bytes_written
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
 end
