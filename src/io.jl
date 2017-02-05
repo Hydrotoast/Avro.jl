@@ -2,6 +2,7 @@ module Io
 
 import Base.write
 
+using Avro.Common
 using Avro.Schemas
 
 export Encoder,
@@ -153,6 +154,70 @@ function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
     end
     bytes_written += encode(encoder, zero(UInt8))
     bytes_written
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Void)
+    index = findfirst(schema.schemas, Schemas.NULL)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.NULL"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Bool)
+    index = findfirst(schema.schemas, Schemas.BOOLEAN)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.BOOLEAN"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int32)
+    index = findfirst(schema.schemas, Schemas.INT)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.INT"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int64)
+    index = findfirst(schema.schemas, Schemas.LONG)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.LONG"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float32)
+    index = findfirst(schema.schemas, Schemas.FLOAT)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.FLOAT"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float64)
+    index = findfirst(schema.schemas, Schemas.DOUBLE)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.DOUBLE"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Vector{UInt8})
+    index = findfirst(schema.schemas, Schemas.BYTES)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.BYTES"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+end
+
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value::String)
+    index = findfirst(schema.schemas, Schemas.STRING)
+    if index == 0
+        throw(Exception("Schema not found in union: Schemas.STRING"))
+    end
+    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 write(writer::DatumWriter, value) = write(writer.encoder, writer.schema, value)
