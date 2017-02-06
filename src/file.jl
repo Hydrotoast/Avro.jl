@@ -22,7 +22,7 @@ const VALID_CODECS = Set(["null", "deflate"])
 Magic constant that is written to the top of every object container file. This
 is the hexadecimal form of 'Obj1'.
 """
-const OBJECT_CONTAINER_FILE_MAGIC = [0x4f, 0x6f, 0x6a, 0x01]
+const OBJECT_CONTAINER_FILE_MAGIC = [0x4f, 0x62, 0x6a, 0x01]
 
 const MAGIC_SCHEMA = Schemas.FixedSchema(Schemas.FullName("Magic"), 4)
 const META_SCHEMA = Schemas.MapSchema(Schemas.BYTES)
