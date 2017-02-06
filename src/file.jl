@@ -75,6 +75,7 @@ end
 function write_header(file_writer::DataFileWriter)
     header = generate_header(file_writer.writer.schema)
     write(file_writer.writer.encoder, METADATA_SCHEMA, header)
+    write(file_writer.writer.encoder, SYNC_SCHEMA, get(header, "sync"))
 end
 
 append(file_writer::DataFileWriter, datum) = write(file_writer.writer, datum)
