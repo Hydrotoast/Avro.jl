@@ -24,6 +24,9 @@ is the hexadecimal form of 'Obj1'.
 """
 const OBJECT_CONTAINER_FILE_MAGIC = [0x4f, 0x62, 0x6a, 0x01]
 
+const META_CODEC_KEY = "avro.codec"
+const META_SCHEMA_KEY = "avro.schema"
+
 const MAGIC_SCHEMA = Schemas.FixedSchema(Schemas.FullName("Magic"), 4)
 const META_SCHEMA = Schemas.MapSchema(Schemas.BYTES)
 const SYNC_SCHEMA = Schemas.FixedSchema(Schemas.FullName("Sync"), 16)
@@ -61,8 +64,8 @@ function generate_header(schema; codec::String = "null")
         [
             GenericFixed(MAGIC_SCHEMA, OBJECT_CONTAINER_FILE_MAGIC),
             Dict(
-                "avro.schema" => string2bytes(string(schema)),
-                "avro.codec" => string2bytes(codec)
+                META_CODEC_KEY => string2bytes(codec)
+                META_SCHEMA_KEY => string2bytes(string(schema)),
             ),
             GenericFixed(SYNC_SCHEMA, generate_sync_marker())
         ]
