@@ -64,7 +64,7 @@ function generate_header(schema; codec::String = "null")
         [
             GenericFixed(MAGIC_SCHEMA, OBJECT_CONTAINER_FILE_MAGIC),
             Dict(
-                META_CODEC_KEY => string2bytes(codec)
+                META_CODEC_KEY => string2bytes(codec),
                 META_SCHEMA_KEY => string2bytes(string(schema)),
             ),
             GenericFixed(SYNC_SCHEMA, generate_sync_marker())
