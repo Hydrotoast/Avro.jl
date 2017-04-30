@@ -36,6 +36,28 @@ const LONG_EXAMPLES =
         (Int64(-8193), Schemas.LONG, [0x81, 0x80, 0x01]),
     ]
 
+const FLOAT_EXAMPLES =
+    [
+        (Float32(0), Schemas.FLOAT, zeros(UInt8, 4)),
+        (Float32(0.1), Schemas.FLOAT, [0xCD, 0xCC, 0xCC, 0x3D]),
+        (Float32(0.2), Schemas.FLOAT, [0xCD, 0xCC, 0x4C, 0x3E]),
+        (Float32(1.0), Schemas.FLOAT, [0x00, 0x00, 0x80, 0x3f]),
+        (Inf32, Schemas.FLOAT, [0x00, 0x00, 0x80, 0x7F]),
+        (-Inf32, Schemas.FLOAT, [0x00, 0x00, 0x80, 0xFF]),
+        (NaN32, Schemas.FLOAT, [0x00, 0x00, 0xC0, 0x7F]),
+    ]
+
+const DOUBLE_EXAMPLES =
+    [
+        (Float64(0), Schemas.DOUBLE, zeros(UInt8, 8)),
+        (Float64(0.1), Schemas.DOUBLE, [0x9A, 0x99, 0x99, 0x99, 0x99, 0x99, 0xb9, 0x3F]),
+        (Float64(0.2), Schemas.DOUBLE, [0x9A, 0x99, 0x99, 0x99, 0x99, 0x99, 0xc9, 0x3F]),
+        (Float64(1.0), Schemas.DOUBLE, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F]),
+        (Inf64, Schemas.DOUBLE, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x7F]),
+        (-Inf64, Schemas.DOUBLE, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xFF]),
+        (NaN64, Schemas.DOUBLE, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x7F]),
+    ]
+
 const STRING_EXAMPLES = 
     [
         ("foo", Schemas.STRING, [0x06, 0x66, 0x6f, 0x6f])
@@ -104,6 +126,60 @@ decoder = BinaryDecoder(buffer)
 
         @test expected == contents
         @test input == output
+        @test length(expected) == bytes_written
+
+        # Inspect the contents of the buffer using write API
+        seekstart(buffer)
+        bytes_written = write(encoder, schema, input)
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
+
+    @testset "Float" for (input, schema, expected) in FLOAT_EXAMPLES
+        # Encode the datum
+        bytes_written = encodeFloat(encoder, input)
+
+        # Inspect the contents of the buffer
+        seekstart(buffer)
+        contents = read(buffer, bytes_written)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = decodeFloat(decoder)
+
+        @test expected == contents
+        if !isnan(input)
+            @test input == output
+        end
+        @test length(expected) == bytes_written
+
+        # Inspect the contents of the buffer using write API
+        seekstart(buffer)
+        bytes_written = write(encoder, schema, input)
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test length(expected) == bytes_written
+    end
+
+    @testset "Double" for (input, schema, expected) in DOUBLE_EXAMPLES
+        # Encode the datum
+        bytes_written = encodeDouble(encoder, input)
+
+        # Inspect the contents of the buffer
+        seekstart(buffer)
+        contents = read(buffer, bytes_written)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = decodeDouble(decoder)
+
+        @test expected == contents
+        if !isnan(input)
+            @test input == output
+        end
         @test length(expected) == bytes_written
 
         # Inspect the contents of the buffer using write API

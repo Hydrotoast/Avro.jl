@@ -116,8 +116,14 @@ function encodeLong(encoder::BinaryEncoder, value::Int64)
     bytes_written
 end
 
-encodeFloat(encoder::BinaryEncoder, value::Float32) = write(encoder.stream, value)
-encodeDouble(encoder::BinaryEncoder, value::Float64) = write(encoder.stream, value)
+function encodeFloat(encoder::BinaryEncoder, value::Float32)
+    isnan(value) ? write(encoder.stream, NaN32) : write(encoder.stream, value)
+end
+
+function encodeDouble(encoder::BinaryEncoder, value::Float64) 
+    isnan(value) ? write(encoder.stream, NaN64) : write(encoder.stream, value)
+end
+
 encodeByte(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
 encodeBytes(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream, value)
 
