@@ -52,7 +52,7 @@ end
 
 function write(encoder::Encoder, schema::EnumSchema, datum::GenericEnumSymbol)
     index = findfirst(schema.symbols, datum.symbol) - 1
-    encode(encoder, index % Int32)
+    encodeInt(encoder, index % Int32)
 end
 
 """
@@ -64,7 +64,7 @@ immutable GenericFixed
 end
 
 function write(encoder::Encoder, schema::FixedSchema, datum::GenericFixed)
-    encode(encoder, datum.bytes)
+    encodeBytes(encoder, datum.bytes)
 end
 
 end

@@ -15,14 +15,14 @@ schema = open(schema_filename, "r") do file
 end
 
 users = [
-  User("bob", 1)
-  User("alice", 2)
+  GenericRecord(schema, ["bob", 1])
+  GenericRecord(schema, ["alice", 2])
 ]
 
 # Write objects
 Avro.create_binary(schema, output_filename) do file_writer
   for user in users
-    append(file_writer, user)
+    File.append!(file_writer, user)
   end
 end
 ```

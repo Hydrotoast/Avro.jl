@@ -12,13 +12,9 @@ export Schemas,
        File
 
 function create_binary(f::Function, schema::Schemas.Schema, output::IO)
-    writer = Io.DatumWriter(Io.BinaryEncoder(output), schema)
-    file_writer = File.DataFileWriter(writer)
-    File.write_header(file_writer)
-
+    file_writer = File.create(schema, output)
     f(file_writer)
-
-    close(output)
+    File.close(file_writer)
 end
 
 function create_binary(f::Function, schema::Schemas.Schema, output_filename::String)

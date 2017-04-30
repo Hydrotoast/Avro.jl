@@ -506,7 +506,7 @@ for primitive_type in PRIMITIVE_TYPES
 end
 
 function show(io::IO, field::Field)
-    write(io, "{\"name\":$(field.name),\"type\":")
+    write(io, "{\"name\":\"$(field.name)\",\"type\":")
     show(io, field.schema)
     write(io, "}")
 end
@@ -517,7 +517,7 @@ function show(io::IO, schema::RecordSchema)
     write(io, ",\"type\":\"record\",\"fields\":[")
     show(io, schema.fields[1])
     for field in schema.fields[2:end]
-        show(io, ",")
+        write(io, ",")
         show(io, field)
     end
     write(io, "]}")

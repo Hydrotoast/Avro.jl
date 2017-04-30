@@ -11,8 +11,15 @@ export Encoder,
        BinaryDecoder,
        DatumWriter,
        DatumReader,
-       encode,
-       write
+       encodeNull,
+       encodeBoolean,
+       encodeInt,
+       encodeLong,
+       encodeFloat,
+       encodeDouble,
+       encodeByte,
+       encodeBytes,
+       encodeString
 
 abstract Encoder
 abstract Decoder
@@ -31,28 +38,10 @@ immutable BinaryDecoder <: Decoder
     stream::IO
 end
 
-"""
-Writes binary data of user-defined types to an output stream. The user-defined
-type is expected to adhere to a schema.
-"""
-immutable DatumWriter
-    encoder::Encoder
-    schema::Schema
-end
+encodeNull(encoder::BinaryEncoder, value::Void) = 0
+encodeBoolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
 
-"""
-Reads binary data of user-defined types from an input stream. The user-defined
-type is expected to adhere to a schema.
-"""
-immutable DatumReader
-    decoder::Decoder
-    schema::Schema
-end
-
-encode(encoder::BinaryEncoder, value::Void) = 0
-encode(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
-
-function encode(encoder::BinaryEncoder, value::Int32)
+function encodeInt(encoder::BinaryEncoder, value::Int32)
     stream = encoder.stream
     bytes_written = 0
     n = (value << 1) $ (value >> 31)
@@ -76,7 +65,7 @@ function encode(encoder::BinaryEncoder, value::Int32)
     bytes_written
 end
 
-function encode(encoder::BinaryEncoder, value::Int64)
+function encodeLong(encoder::BinaryEncoder, value::Int64)
     stream = encoder.stream
     bytes_written = 0
     n = (value << 1) $ (value >> 63)
@@ -116,43 +105,49 @@ function encode(encoder::BinaryEncoder, value::Int64)
     bytes_written
 end
 
-encode(encoder::BinaryEncoder, value::Float32) = write(encoder.stream, value)
-encode(encoder::BinaryEncoder, value::Float64) = write(encoder.stream, value)
-encode(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
-encode(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream, value)
+encodeFloat(encoder::BinaryEncoder, value::Float32) = write(encoder.stream, value)
+encodeDouble(encoder::BinaryEncoder, value::Float64) = write(encoder.stream, value)
+encodeByte(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
+encodeBytes(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream, value)
 
-function encode(encoder::BinaryEncoder, value::String)
-    encode(encoder, sizeof(value)) + write(encoder.stream, value)
+function encodeString(encoder::BinaryEncoder, value::String)
+    encodeLong(encoder, sizeof(value)) + write(encoder.stream, value)
 end
 
 # Default writers
 
-write(encoder::Encoder, schema::NullSchema, value::Void) = encode(encoder, value)
-write(encoder::Encoder, schema::BooleanSchema, value::Bool) = encode(encoder, value)
-write(encoder::Encoder, schema::IntSchema, value::Int32) = encode(encoder, value)
-write(encoder::Encoder, schema::LongSchema, value::Int64) = encode(encoder, value)
-write(encoder::Encoder, schema::FloatSchema, value::Float32) = encode(encoder, value)
-write(encoder::Encoder, schema::DoubleSchema, value::Float64) = encode(encoder, value)
-write(encoder::Encoder, schema::BytesSchema, value::UInt8) = encode(encoder, value)
-write(encoder::Encoder, schema::BytesSchema, value::Vector{UInt8}) = encode(encoder, value)
-write(encoder::Encoder, schema::StringSchema, value::String) = encode(encoder, value)
+write(encoder::Encoder, schema::NullSchema, value::Void) = encodeNull(encoder, value)
+write(encoder::Encoder, schema::BooleanSchema, value::Bool) = encodeBoolean(encoder, value)
+write(encoder::Encoder, schema::IntSchema, value::Int32) = encodeInt(encoder, value)
+write(encoder::Encoder, schema::LongSchema, value::Int64) = encodeLong(encoder, value)
+write(encoder::Encoder, schema::FloatSchema, value::Float32) = encodeFloat(encoder, value)
+write(encoder::Encoder, schema::DoubleSchema, value::Float64) = encodeDouble(encoder, value)
+write(encoder::Encoder, schema::BytesSchema, value::UInt8) = encodeByte(encoder, value)
+write(encoder::Encoder, schema::BytesSchema, value::Vector{UInt8}) = encodeBytes(encoder, value)
+write(encoder::Encoder, schema::StringSchema, value::String) = encodeString(encoder, value)
 
+"""
+Natively write arrays to Avro.
+"""
 function write{T}(encoder::Encoder, schema::ArraySchema, value::Vector{T})
-    bytes_written = encode(encoder, Int64(length(value)))
+    bytes_written = encodeLong(encoder, Int64(length(value)))
     for item in value
         bytes_written += write(encoder, schema.items, item)
     end
-    bytes_written += encode(encoder, zero(UInt8))
+    bytes_written += encodeByte(encoder, zero(UInt8))
     bytes_written
 end
 
+"""
+Natively write maps to Avro.
+"""
 function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
-    bytes_written = encode(encoder, Int64(length(value)))
+    bytes_written = encodeLong(encoder, Int64(length(value)))
     for (k, v) in value
-        bytes_written += encode(encoder, k)
+        bytes_written += encodeString(encoder, k)
         bytes_written += write(encoder, schema.values, v)
     end
-    bytes_written += encode(encoder, zero(UInt8))
+    bytes_written += encodeByte(encoder, zero(UInt8))
     bytes_written
 end
 
@@ -161,7 +156,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Void)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.NULL"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Bool)
@@ -169,7 +164,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Bool)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.BOOLEAN"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int32)
@@ -177,7 +172,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int32)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.INT"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int64)
@@ -185,7 +180,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int64)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.LONG"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float32)
@@ -193,7 +188,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float32)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.FLOAT"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float64)
@@ -201,7 +196,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float64)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.DOUBLE"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Vector{UInt8})
@@ -209,7 +204,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Vector{UInt
     if index == 0
         throw(Exception("Schema not found in union: Schemas.BYTES"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::String)
@@ -217,9 +212,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::String)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.STRING"))
     end
-    encode(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
-
-write(writer::DatumWriter, value) = write(writer.encoder, writer.schema, value)
 
 end

@@ -65,7 +65,7 @@ encoder = BinaryEncoder(buffer)
 
 @testset "Encoding" begin
     @testset "Integer" for (input, schema, expected) in INT_EXAMPLES
-        bytes_written = encode(encoder, input)
+        bytes_written = encodeInt(encoder, input)
         contents = takebuf_array(buffer)
 
         @test expected == contents
@@ -79,7 +79,7 @@ encoder = BinaryEncoder(buffer)
     end
 
     @testset "Long" for (input, schema, expected) in LONG_EXAMPLES
-        bytes_written = encode(encoder, input)
+        bytes_written = encodeLong(encoder, input)
         contents = takebuf_array(buffer)
 
         @test expected == contents
@@ -93,7 +93,7 @@ encoder = BinaryEncoder(buffer)
     end
 
     @testset "Boolean" for (input, schema, expected) in BOOLEAN_EXAMPLES
-        bytes_written = encode(encoder, input)
+        bytes_written = encodeBoolean(encoder, input)
         contents = takebuf_array(buffer)
 
         @test expected == contents
@@ -107,7 +107,7 @@ encoder = BinaryEncoder(buffer)
     end
 
     @testset "String" for (input, schema, expected) in STRING_EXAMPLES
-        bytes_written = encode(encoder, input)
+        bytes_written = encodeString(encoder, input)
         contents = takebuf_array(buffer)
 
         @test expected == contents
