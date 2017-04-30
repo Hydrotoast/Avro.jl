@@ -1,6 +1,7 @@
 module File
 
 import Base.close
+import Base: open, start, next, done
 
 using Avro.Generic
 using Avro.Io
@@ -41,7 +42,10 @@ function DataFileWriter(
 end
 
 immutable DataFileReader
+    input_decoder::BinaryDecoder
     schema::Schemas.Schema
+    codec::String
+    sync_marker::Vector{UInt8}
 end
 
 const VALID_CODECS = Set(["null", "deflate"])
@@ -103,6 +107,8 @@ function write_header(file_writer::DataFileWriter)
     # Write the header directly the output encoder
     write(file_writer.output_encoder, METADATA_SCHEMA, header)
 end
+
+# File writing
 
 function create(
         schema::Schemas.Schema, 
@@ -171,6 +177,63 @@ function write_block(file_writer::DataFileWriter)
         # Reset the block counter
         file_writer.block_count = 0
     end
+end
+
+# File reading
+
+"""
+Read the header directly the input decoder.
+"""
+function read_header(input_decoder::BinaryDecoder)
+    read(input_decoder, METADATA_SCHEMA)
+end
+
+function open(input::IO)
+    input_decoder = BinaryDecoder(input)
+
+    header = read_header(input_decoder)
+    magic = getindex(header, 1)
+    meta = getindex(header, 2)
+    sync_marker = getindex(header, 3).bytes
+
+    # The magic header is invalid
+    if magic.bytes != OBJECT_CONTAINER_FILE_MAGIC
+        throw("Not an Avro data file.")
+    end
+
+    # Parse the schema from the metadata
+    schema = Schemas.parse(meta[META_SCHEMA_KEY])
+    codec = meta[META_CODEC_KEY]
+
+    DataFileReader(input_decoder, schema, codec, sync_marker)
+end
+
+function read_block_header(input_decoder::BinaryDecoder)
+    block_count = decodeLong(input_decoder)
+    num_bytes = decodeLong(input_decoder)
+    block_count 
+end
+
+function start(file_reader::DataFileReader)
+    read_block_header(file_reader.input_decoder)
+end
+
+function next(file_reader::DataFileReader, state)
+    block_count = state
+    if block_count == 0
+        block_count = read_block_header(file_reader.input_decoder)
+    end
+    item = read(file_reader.input_decoder, file_reader.schema)
+    (item, block_count - 1)
+end
+
+function done(file_reader::DataFileReader, state)
+    block_count = state
+    if block_count == 0
+        sync = read(file_reader.input_decoder, SYNC_SCHEMA)
+        @assert file_reader.sync_marker == sync.bytes
+    end
+    eof(file_reader.input_decoder.stream)
 end
 
 end
