@@ -486,7 +486,7 @@ Equality definitions for schemas.
 =={A <: Schema}(b, ::A) = false
 =={A <: PrimitiveSchema}(::A, ::A) = true 
 ==(a::RecordSchema, b::RecordSchema) = a.fullname == b.fullname
-==(a::EnumSchema, b::EnumSchema) = a.fullname == b.fullname && a.symbols == y.symbols
+==(a::EnumSchema, b::EnumSchema) = a.fullname == b.fullname && a.symbols == b.symbols
 ==(a::ArraySchema, b::ArraySchema) = a.items == b.items
 ==(a::MapSchema, b::MapSchema) = a.values == b.values
 ==(a::UnionSchema, b::UnionSchema) = a.schemas == b.schemas

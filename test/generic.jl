@@ -40,28 +40,88 @@ const FIXED_EXAMPLES =
         (GenericFixed(TEST_FIXED_SCHEMA, [0xAA, 0xBB]), [0xAA, 0xBB])
     ]
 
+const ARRAY_EXAMPLES = 
+    [
+        (
+            Int64[3, 27], 
+            Schemas.ArraySchema(Schemas.LONG), 
+            [0x04, 0x06, 0x36, 0x00]
+        )
+    ]
+
+const MAP_EXAMPLES = 
+    [
+        (
+            Dict{String, Int64}("bar" => 27, "foo" => 3),
+            Schemas.MapSchema(Schemas.LONG),
+            [0x04, 0x06, 0x62, 0x61, 0x72, 0x36, 0x06, 0x66, 0x6f, 0x6f, 0x06, 0x00]
+        )
+    ]
+
+
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
+decoder = BinaryDecoder(buffer)
 
 @testset "Generic writers" begin
     @testset "Record" for (input, expected) in RECORD_EXAMPLES
+        # Encode the datum
         bytes_written = write(encoder, input.schema, input)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = read(decoder, input.schema)
+
+        # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
 
         @test expected == contents
+        @test input == output
         @test length(expected) == bytes_written
     end
 
     @testset "Enum" for (input, expected) in ENUM_EXAMPLES
+        # Encode the datum
         bytes_written = write(encoder, input.schema, input)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = read(decoder, input.schema)
+
+        # Inspect the contents of the buffer
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test input == output
+        @test length(expected) == bytes_written
+    end
+
+    @testset "Fixed" for (input, expected) in FIXED_EXAMPLES
+        # Encode the datum
+        bytes_written = write(encoder, input.schema, input)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = read(decoder, input.schema)
+
+        # Inspect the contents of the buffer
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test input == output
+        @test length(expected) == bytes_written
+    end
+
+    @testset "Array" for (input, schema, expected) in ARRAY_EXAMPLES
+        bytes_written = write(encoder, schema, input)
         contents = takebuf_array(buffer)
 
         @test expected == contents
         @test length(expected) == bytes_written
     end
 
-    @testset "Fixed" for (input, expected) in FIXED_EXAMPLES
-        bytes_written = write(encoder, input.schema, input)
+    @testset "Map" for (input, schema, expected) in MAP_EXAMPLES
+        bytes_written = write(encoder, schema, input)
         contents = takebuf_array(buffer)
 
         @test expected == contents

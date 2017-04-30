@@ -64,24 +64,6 @@ const STRING_EXAMPLES =
         ("", Schemas.STRING, [0x00])
     ]
 
-const ARRAY_EXAMPLES = 
-    [
-        (
-            Int64[3, 27], 
-            Schemas.ArraySchema(Schemas.LONG), 
-            [0x04, 0x06, 0x36, 0x00]
-        )
-    ]
-
-const MAP_EXAMPLES = 
-    [
-        (
-            Dict{String, Int64}("bar" => 27, "foo" => 3),
-            Schemas.MapSchema(Schemas.LONG),
-            [0x04, 0x06, 0x62, 0x61, 0x72, 0x36, 0x06, 0x66, 0x6f, 0x6f, 0x06, 0x00]
-        )
-    ]
-
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
 decoder = BinaryDecoder(buffer)
@@ -91,49 +73,33 @@ decoder = BinaryDecoder(buffer)
         # Encode the datum
         bytes_written = encodeInt(encoder, input)
 
-        # Inspect the contents of the buffer
-        seekstart(buffer)
-        contents = read(buffer, bytes_written)
-
         # Decode the datum
         seekstart(buffer)
         output = decodeInt(decoder)
+
+        # Inspect the contents of the buffer
+        contents = takebuf_array(buffer)
 
         @test expected == contents
         @test input == output
         @test length(expected) == bytes_written
 
-        # Inspect the contents of the buffer using write API
-        seekstart(buffer)
-        bytes_written = write(encoder, schema, input)
-        contents = takebuf_array(buffer)
-
-        @test expected == contents
-        @test length(expected) == bytes_written
+        takebuf_array(buffer)
     end
 
     @testset "Long" for (input, schema, expected) in LONG_EXAMPLES
         # Encode the datum
         bytes_written = encodeLong(encoder, input)
 
-        # Inspect the contents of the buffer
-        seekstart(buffer)
-        contents = read(buffer, bytes_written)
-
         # Decode the datum
         seekstart(buffer)
         output = decodeLong(decoder)
 
-        @test expected == contents
-        @test input == output
-        @test length(expected) == bytes_written
-
-        # Inspect the contents of the buffer using write API
-        seekstart(buffer)
-        bytes_written = write(encoder, schema, input)
+        # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
 
         @test expected == contents
+        @test input == output
         @test length(expected) == bytes_written
     end
 
@@ -141,26 +107,17 @@ decoder = BinaryDecoder(buffer)
         # Encode the datum
         bytes_written = encodeFloat(encoder, input)
 
-        # Inspect the contents of the buffer
-        seekstart(buffer)
-        contents = read(buffer, bytes_written)
-
         # Decode the datum
         seekstart(buffer)
         output = decodeFloat(decoder)
+
+        # Inspect the contents of the buffer
+        contents = takebuf_array(buffer)
 
         @test expected == contents
         if !isnan(input)
             @test input == output
         end
-        @test length(expected) == bytes_written
-
-        # Inspect the contents of the buffer using write API
-        seekstart(buffer)
-        bytes_written = write(encoder, schema, input)
-        contents = takebuf_array(buffer)
-
-        @test expected == contents
         @test length(expected) == bytes_written
     end
 
@@ -168,26 +125,17 @@ decoder = BinaryDecoder(buffer)
         # Encode the datum
         bytes_written = encodeDouble(encoder, input)
 
-        # Inspect the contents of the buffer
-        seekstart(buffer)
-        contents = read(buffer, bytes_written)
-
         # Decode the datum
         seekstart(buffer)
         output = decodeDouble(decoder)
+
+        # Inspect the contents of the buffer
+        contents = takebuf_array(buffer)
 
         @test expected == contents
         if !isnan(input)
             @test input == output
         end
-        @test length(expected) == bytes_written
-
-        # Inspect the contents of the buffer using write API
-        seekstart(buffer)
-        bytes_written = write(encoder, schema, input)
-        contents = takebuf_array(buffer)
-
-        @test expected == contents
         @test length(expected) == bytes_written
     end
 
@@ -195,24 +143,15 @@ decoder = BinaryDecoder(buffer)
         # Encode the datum
         bytes_written = encodeBoolean(encoder, input)
 
-        # Inspect the contents of the buffer
-        seekstart(buffer)
-        contents = read(buffer, bytes_written)
-
         # Decode the datum
         seekstart(buffer)
         output = decodeBoolean(decoder)
 
-        @test expected == contents
-        @test input == output
-        @test length(expected) == bytes_written
-
-        # Inspect the contents of the buffer using write API
-        seekstart(buffer)
-        bytes_written = write(encoder, schema, input)
+        # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
 
         @test expected == contents
+        @test input == output
         @test length(expected) == bytes_written
     end
 
@@ -220,40 +159,15 @@ decoder = BinaryDecoder(buffer)
         # Encode the datum
         bytes_written = encodeString(encoder, input)
 
-        # Inspect the contents of the buffer
-        seekstart(buffer)
-        contents = read(buffer, bytes_written)
-
         # Decode the datum
         seekstart(buffer)
         output = decodeString(decoder)
 
+        # Inspect the contents of the buffer
+        contents = takebuf_array(buffer)
+
         @test expected == contents
         @test output == input
-        @test length(expected) == bytes_written
-
-        # Inspect the contents of the bfufer using the write API
-        seekstart(buffer)
-        bytes_written = write(encoder, schema, input)
-        contents = takebuf_array(buffer)
-
-        @test expected == contents
-        @test length(expected) == bytes_written
-    end
-
-    @testset "Array" for (input, schema, expected) in ARRAY_EXAMPLES
-        bytes_written = write(encoder, schema, input)
-        contents = takebuf_array(buffer)
-
-        @test expected == contents
-        @test length(expected) == bytes_written
-    end
-
-    @testset "Map" for (input, schema, expected) in MAP_EXAMPLES
-        bytes_written = write(encoder, schema, input)
-        contents = takebuf_array(buffer)
-
-        @test expected == contents
         @test length(expected) == bytes_written
     end
 end
