@@ -47,7 +47,7 @@ immutable BinaryDecoder <: Decoder
     stream::IO
 end
 
-# Encoders[j
+# Encoders
 
 encodeNull(encoder::BinaryEncoder, value::Void) = 0
 encodeBoolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
@@ -129,6 +129,43 @@ end
 
 decodeNull(decoder::Decoder) = nothing
 decodeBoolean(decoder::Decoder) = read(decoder.stream, Bool)
+
+function decodeInt(decoder::Decoder)
+    stream = decoder.stream
+    b = read(stream, UInt8) % Int
+    n = b & 0x7F
+    bytes_read = 1
+    while b > 0x7F && bytes_read < 5
+        b = read(stream, UInt8) % Int
+        n $= (b & 0x7F) << (7 * bytes_read)
+        bytes_read += 1
+    end
+    if b > 0x7F
+        throw("Invalid int encoding")
+    end
+
+    # Return the results in two's-complement
+    (n >>> 1) $ -(n & 1)
+end
+
+function decodeLong(decoder::Decoder)
+    stream = decoder.stream
+    b = read(stream, UInt8) % Int
+    n = b & 0x7F
+    bytes_read = 1
+    while b > 0x7F && bytes_read < 10
+        b = read(stream, UInt8) % Int
+        n $= (b & 0x7F) << (7 * bytes_read)
+        bytes_read += 1
+    end
+    if b > 0x7F
+        throw("Invalid int encoding")
+    end
+
+    # Return the results in two's-complement
+    (n >>> 1) $ -(n & 1)
+end
+
 decodeFloat(decoder::Decoder) = read(decoder.stream, Float32)
 decodeDouble(decoder::Decoder) = read(decoder.stream, Float64)
 decodeByte(decoder::Decoder) = read(decoder.stream, UInt8)
