@@ -19,7 +19,16 @@ export Encoder,
        encodeDouble,
        encodeByte,
        encodeBytes,
-       encodeString
+       encodeString,
+       decodeNull,
+       decodeBoolean,
+       decodeInt,
+       decodeLong,
+       decodeFloat,
+       decodeDouble,
+       decodeByte,
+       decodeBytes,
+       decodeString
 
 abstract Encoder
 abstract Decoder
@@ -37,6 +46,8 @@ Reads data of simple and primitive types from an input stream.
 immutable BinaryDecoder <: Decoder
     stream::IO
 end
+
+# Encoders[j
 
 encodeNull(encoder::BinaryEncoder, value::Void) = 0
 encodeBoolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
@@ -113,6 +124,15 @@ encodeBytes(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream
 function encodeString(encoder::BinaryEncoder, value::String)
     encodeLong(encoder, sizeof(value)) + write(encoder.stream, value)
 end
+
+# Decoders
+
+decodeNull(decoder::Decoder) = nothing
+decodeBoolean(decoder::Decoder) = read(decoder.stream, Bool)
+decodeFloat(decoder::Decoder) = read(decoder.stream, Float32)
+decodeDouble(decoder::Decoder) = read(decoder.stream, Float64)
+decodeByte(decoder::Decoder) = read(decoder.stream, UInt8)
+decodeBytes(decoder::Decoder, nb::Int) = read(decoder.stream, nb)
 
 # Default writers
 

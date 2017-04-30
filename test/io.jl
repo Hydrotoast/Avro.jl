@@ -62,9 +62,11 @@ const MAP_EXAMPLES =
 
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
+decoder = BinaryDecoder(buffer)
 
 @testset "Encoding" begin
     @testset "Integer" for (input, schema, expected) in INT_EXAMPLES
+        output = zero(Int32)
         bytes_written = encodeInt(encoder, input)
         contents = takebuf_array(buffer)
 
@@ -93,12 +95,23 @@ encoder = BinaryEncoder(buffer)
     end
 
     @testset "Boolean" for (input, schema, expected) in BOOLEAN_EXAMPLES
+        # Encode the datum
         bytes_written = encodeBoolean(encoder, input)
-        contents = takebuf_array(buffer)
+
+        # Inspect the contents of the buffer
+        seekstart(buffer)
+        contents = read(buffer, bytes_written)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = decodeBoolean(decoder)
 
         @test expected == contents
+        @test input == output
         @test length(expected) == bytes_written
 
+        # Inspect the contents of the buffer using write API
+        seekstart(buffer)
         bytes_written = write(encoder, schema, input)
         contents = takebuf_array(buffer)
 
