@@ -141,12 +141,23 @@ decoder = BinaryDecoder(buffer)
     end
 
     @testset "String" for (input, schema, expected) in STRING_EXAMPLES
+        # Encode the datum
         bytes_written = encodeString(encoder, input)
-        contents = takebuf_array(buffer)
+
+        # Inspect the contents of the buffer
+        seekstart(buffer)
+        contents = read(buffer, bytes_written)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = decodeString(decoder)
 
         @test expected == contents
+        @test output == input
         @test length(expected) == bytes_written
 
+        # Inspect the contents of the bfufer using the write API
+        seekstart(buffer)
         bytes_written = write(encoder, schema, input)
         contents = takebuf_array(buffer)
 

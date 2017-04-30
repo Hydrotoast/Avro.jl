@@ -171,6 +171,11 @@ decodeDouble(decoder::Decoder) = read(decoder.stream, Float64)
 decodeByte(decoder::Decoder) = read(decoder.stream, UInt8)
 decodeBytes(decoder::Decoder, nb::Int) = read(decoder.stream, nb)
 
+function decodeString(decoder::Decoder)
+    nb = decodeLong(decoder)
+    String(decodeBytes(decoder, nb))
+end
+
 # Default writers
 
 write(encoder::Encoder, schema::NullSchema, value::Void) = encodeNull(encoder, value)
