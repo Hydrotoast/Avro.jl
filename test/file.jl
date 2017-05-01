@@ -23,7 +23,7 @@ records = [
     buffer = IOBuffer()
     file_writer = FileWriter.create(TEST_RECORD_SCHEMA, buffer)
     for record in records
-        FileWriter.append(file_writer, record)
+        FileWriter.append!(file_writer, record)
     end
     FileWriter.write_block(file_writer)
 

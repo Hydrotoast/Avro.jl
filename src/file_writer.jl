@@ -63,7 +63,7 @@ function create(
     file_writer
 end
 
-function append(file_writer::DataFileWriter, datum)
+function append!(file_writer::DataFileWriter, datum)
     buffer_encoder = file_writer.buffer_encoder
     schema = file_writer.schema
     
