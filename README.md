@@ -1,13 +1,13 @@
 # Using Avro
 
-## Writing to an Avro Container File
+## Writing to an Avro File
 
 ```julia
 using Avro
-using Avro.File
 
 schema_filename = "user.avsc"
 output_filename = "users.avro"
+output = open(output_filename, "w")
 
 # Parse the schema
 schema = open(schema_filename, "r") do file
@@ -20,24 +20,23 @@ users = [
 ]
 
 # Write objects
-Avro.create_binary(schema, output_filename) do file_writer
-  for user in users
-    File.append!(file_writer, user)
-  end
+file_writer = FileWriter.create(schema, output)
+for user in users
+  FileWriter.append!(file_writer, user)
 end
+FileWriter.close(file_writer)
 ```
 
-## Reading from an Avro Container File
+## Reading from an Avro File
 
 ```julia
 using Avro
-using Avro.File
 
 input_filename = "users.avro"
 input = open(input_filename, "r")
 
 # Read the objects
-for record in File.open(input)
+for record in FileReader.open(input)
   println(record)
 end
 ```
