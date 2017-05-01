@@ -96,3 +96,31 @@ FIXED_EXAMPLES = [
         Avro.parse(example)
     end
 end
+
+@testset "Schema equality" begin
+    @testset "Primitive" begin
+        @test Schemas.NULL == NullSchema()
+        @test Schemas.NULL == Schemas.PrimitiveSchema("null")
+
+        @test Schemas.BOOLEAN == BooleanSchema()
+        @test Schemas.BOOLEAN == Schemas.PrimitiveSchema("boolean")
+
+        @test Schemas.INT == IntSchema()
+        @test Schemas.INT == Schemas.PrimitiveSchema("int")
+
+        @test Schemas.LONG == LongSchema()
+        @test Schemas.LONG == Schemas.PrimitiveSchema("long")
+        
+        @test Schemas.FLOAT == FloatSchema()
+        @test Schemas.FLOAT == Schemas.PrimitiveSchema("float")
+
+        @test Schemas.DOUBLE == DoubleSchema()
+        @test Schemas.DOUBLE == Schemas.PrimitiveSchema("double")
+
+        @test Schemas.BYTES == BytesSchema()
+        @test Schemas.BYTES == Schemas.PrimitiveSchema("bytes")
+
+        @test Schemas.STRING == StringSchema()
+        @test Schemas.STRING == Schemas.PrimitiveSchema("string")
+    end
+end
