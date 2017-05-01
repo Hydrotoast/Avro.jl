@@ -210,7 +210,6 @@ read(decoder::Decoder, schema::IntSchema) = decode_int(decoder)
 read(decoder::Decoder, schema::LongSchema) = decode_long(decoder)
 read(decoder::Decoder, schema::FloatSchema) = decode_float(decoder)
 read(decoder::Decoder, schema::DoubleSchema) = decode_double(decoder)
-read(decoder::Decoder, schema::BytesSchema) = decode_byte(decoder)
 read(decoder::Decoder, schema::BytesSchema) = decode_bytes(decoder)
 read(decoder::Decoder, schema::StringSchema) = decode_string(decoder)
 
