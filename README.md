@@ -51,3 +51,10 @@ for record in FileReader.open(input)
     println(record)
 end
 ```
+
+## TODO
+
+- `deflate` codec. See [Libz](https://github.com/BioJulia/Libz.jl).
+- Schema validation
+- Schema default values
+- Code generation from schemas
