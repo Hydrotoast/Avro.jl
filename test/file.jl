@@ -1,7 +1,7 @@
 module FileTest
 
 using Avro
-using Avro.File
+using Avro.Schemas
 using Avro.Generic
 
 using Base.Test
@@ -21,14 +21,14 @@ records = [
 
 @testset "File reading and writing" begin
     buffer = IOBuffer()
-    file_writer = File.create(TEST_RECORD_SCHEMA, buffer)
+    file_writer = FileWriter.create(TEST_RECORD_SCHEMA, buffer)
     for record in records
-        File.append(file_writer, record)
+        FileWriter.append(file_writer, record)
     end
-    File.write_block(file_writer)
+    FileWriter.write_block(file_writer)
 
     contents = takebuf_array(buffer)
-    @test contents[1:4] == Avro.File.OBJECT_CONTAINER_FILE_MAGIC
+    @test contents[1:4] == Avro.FileCommon.OBJECT_CONTAINER_FILE_MAGIC
     # This block should have 2 records with 10 bytes of data
     @test contents[end - 27] == 0x04 # 2 records
     @test contents[end - 26] == 0x14 # 10 bytes
@@ -38,7 +38,7 @@ records = [
 
     read_buffer = IOBuffer(contents)
     read_records = GenericRecord[]
-    for record in File.open(read_buffer)
+    for record in FileReader.open(read_buffer)
         push!(read_records, record)
     end
     @test records == read_records

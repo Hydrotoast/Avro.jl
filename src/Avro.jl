@@ -4,12 +4,15 @@ include("common.jl")
 include("schema.jl")
 include("io.jl")
 include("generic.jl")
-include("file.jl")
+include("file_common.jl")
+include("file_writer.jl")
+include("file_reader.jl")
 
-export Schemas,
-       Io,
+export FileWriter,
+       FileReader
        Generic,
-       File
+       Io,
+       Schemas
 
 function create_binary(f::Function, schema::Schemas.Schema, output::IO)
     file_writer = File.create(schema, output)
