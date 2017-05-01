@@ -528,7 +528,7 @@ function show(io::IO, schema::EnumSchema)
     write(io, "{\"name\":")
     show(io, schema.fullname)
     write(io, ",\"type\":\"enum\",\"symbols\":[")
-    write(io, join(["\"$symbol\"" for smybol in schema.symbols], ","))
+    write(io, join(["\"$symbol\"" for symbol in schema.symbols], ","))
     write(io, "]}")
 end
 
