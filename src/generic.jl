@@ -15,26 +15,26 @@ export GenericRecord,
 
 # Generic writers
 
-write(encoder::Encoder, schema::NullSchema, value::Void) = encodeNull(encoder, value)
-write(encoder::Encoder, schema::BooleanSchema, value::Bool) = encodeBoolean(encoder, value)
-write(encoder::Encoder, schema::IntSchema, value::Int32) = encodeInt(encoder, value)
-write(encoder::Encoder, schema::LongSchema, value::Int64) = encodeLong(encoder, value)
-write(encoder::Encoder, schema::FloatSchema, value::Float32) = encodeFloat(encoder, value)
-write(encoder::Encoder, schema::DoubleSchema, value::Float64) = encodeDouble(encoder, value)
-write(encoder::Encoder, schema::BytesSchema, value::UInt8) = encodeByte(encoder, value)
-write(encoder::Encoder, schema::BytesSchema, value::Vector{UInt8}) = encodeBytes(encoder, value)
-write(encoder::Encoder, schema::StringSchema, value::String) = encodeString(encoder, value)
+write(encoder::Encoder, schema::NullSchema, value::Void) = encode_null(encoder, value)
+write(encoder::Encoder, schema::BooleanSchema, value::Bool) = encode_boolean(encoder, value)
+write(encoder::Encoder, schema::IntSchema, value::Int32) = encode_int(encoder, value)
+write(encoder::Encoder, schema::LongSchema, value::Int64) = encode_long(encoder, value)
+write(encoder::Encoder, schema::FloatSchema, value::Float32) = encode_float(encoder, value)
+write(encoder::Encoder, schema::DoubleSchema, value::Float64) = encode_double(encoder, value)
+write(encoder::Encoder, schema::BytesSchema, value::UInt8) = encode_byte(encoder, value)
+write(encoder::Encoder, schema::BytesSchema, value::Vector{UInt8}) = encode_bytes(encoder, value)
+write(encoder::Encoder, schema::StringSchema, value::String) = encode_string(encoder, value)
 
 """
 Writes an array of Avro objects if there is a 
 write(Encoder, typeof(ArraySchema.items), T) method.
 """
 function write{T}(encoder::Encoder, schema::ArraySchema, value::Vector{T})
-    bytes_written = encodeLong(encoder, Int64(length(value)))
+    bytes_written = encode_long(encoder, Int64(length(value)))
     for item in value
         bytes_written += write(encoder, schema.items, item)
     end
-    bytes_written += encodeByte(encoder, zero(UInt8))
+    bytes_written += encode_byte(encoder, zero(UInt8))
     bytes_written
 end
 
@@ -43,12 +43,12 @@ Writes a map of Avro objects if there is a
 write(Encoder, typeof(MapSchema.values), T) method.
 """
 function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
-    bytes_written = encodeLong(encoder, Int64(length(value)))
+    bytes_written = encode_long(encoder, Int64(length(value)))
     for (k, v) in value
-        bytes_written += encodeString(encoder, k)
+        bytes_written += encode_string(encoder, k)
         bytes_written += write(encoder, schema.values, v)
     end
-    bytes_written += encodeByte(encoder, zero(UInt8))
+    bytes_written += encode_byte(encoder, zero(UInt8))
     bytes_written
 end
 
@@ -57,7 +57,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Void)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.NULL"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Bool)
@@ -65,7 +65,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Bool)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.BOOLEAN"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int32)
@@ -73,7 +73,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int32)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.INT"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int64)
@@ -81,7 +81,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int64)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.LONG"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float32)
@@ -89,7 +89,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float32)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.FLOAT"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float64)
@@ -97,7 +97,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float64)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.DOUBLE"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Vector{UInt8})
@@ -105,7 +105,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Vector{UInt
     if index == 0
         throw(Exception("Schema not found in union: Schemas.BYTES"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value::String)
@@ -113,7 +113,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value::String)
     if index == 0
         throw(Exception("Schema not found in union: Schemas.STRING"))
     end
-    encodeInt(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
 end
 
 """
@@ -175,11 +175,11 @@ end
 
 function write(encoder::Encoder, schema::EnumSchema, datum::GenericEnumSymbol)
     index = findfirst(schema.symbols, datum.symbol) - 1
-    encodeInt(encoder, index % Int32)
+    encode_int(encoder, index % Int32)
 end
 
 function read(decoder::Decoder, schema::EnumSchema)
-    GenericEnumSymbol(schema, schema.symbols[decodeInt(decoder) + 1])
+    GenericEnumSymbol(schema, schema.symbols[decode_int(decoder) + 1])
 end
 
 """
@@ -195,35 +195,35 @@ function ==(a::GenericFixed, b::GenericFixed)
 end
 
 function write(encoder::Encoder, schema::FixedSchema, datum::GenericFixed)
-    encodeBytes(encoder, datum.bytes)
+    encode_bytes(encoder, datum.bytes)
 end
 
 function read(decoder::Decoder, schema::FixedSchema)
-    GenericFixed(schema, decodeBytes(decoder, schema.size))
+    GenericFixed(schema, decode_bytes(decoder, schema.size))
 end
 
 # Generic readers
 
-read(decoder::Decoder, schema::NullSchema) = decodeNull(decoder)
-read(decoder::Decoder, schema::BooleanSchema) = decodeBoolean(decoder)
-read(decoder::Decoder, schema::IntSchema) = decodeInt(decoder)
-read(decoder::Decoder, schema::LongSchema) = decodeLong(decoder)
-read(decoder::Decoder, schema::FloatSchema) = decodeFloat(decoder)
-read(decoder::Decoder, schema::DoubleSchema) = decodeDouble(decoder)
-read(decoder::Decoder, schema::BytesSchema) = decodeByte(decoder)
-read(decoder::Decoder, schema::BytesSchema) = decodeBytes(decoder)
-read(decoder::Decoder, schema::StringSchema) = decodeString(decoder)
+read(decoder::Decoder, schema::NullSchema) = decode_null(decoder)
+read(decoder::Decoder, schema::BooleanSchema) = decode_boolean(decoder)
+read(decoder::Decoder, schema::IntSchema) = decode_int(decoder)
+read(decoder::Decoder, schema::LongSchema) = decode_long(decoder)
+read(decoder::Decoder, schema::FloatSchema) = decode_float(decoder)
+read(decoder::Decoder, schema::DoubleSchema) = decode_double(decoder)
+read(decoder::Decoder, schema::BytesSchema) = decode_byte(decoder)
+read(decoder::Decoder, schema::BytesSchema) = decode_bytes(decoder)
+read(decoder::Decoder, schema::StringSchema) = decode_string(decoder)
 
 """
 Reads array of Avro objects into generic instances.
 """
 function read(decoder::Decoder, schema::ArraySchema)
-    n = decodeLong(decoder)
+    n = decode_long(decoder)
     result = Array(Any, n)
     for i in 1:n
         result[i] = read(decoder, schema.items)
     end
-    decodeByte(decoder)
+    decode_byte(decoder)
     result
 end
 
@@ -231,14 +231,14 @@ end
 Read maps of Avro objects into generic instances.
 """
 function read(decoder::Decoder, schema::MapSchema)
-    n = decodeLong(decoder)
+    n = decode_long(decoder)
     result = Dict{String, Any}()
     for i in 1:n
-        key = decodeString(decoder)
+        key = decode_string(decoder)
         value = read(decoder, schema.values)
         result[key] = value
     end
-    decodeByte(decoder)
+    decode_byte(decoder)
     result
 end
 

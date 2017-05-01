@@ -169,10 +169,10 @@ function write_block(file_writer::DataFileWriter)
 
         # Write number of records, the blocks size (bytes), the data, and then
         # the sync marker
-        encodeLong(output_encoder, file_writer.block_count)
-        encodeLong(output_encoder, length(buffer_data))
-        encodeBytes(output_encoder, buffer_data)
-        encodeBytes(output_encoder, file_writer.sync_marker)
+        encode_long(output_encoder, file_writer.block_count)
+        encode_long(output_encoder, length(buffer_data))
+        encode_bytes(output_encoder, buffer_data)
+        encode_bytes(output_encoder, file_writer.sync_marker)
 
         # Reset the block counter
         file_writer.block_count = 0
@@ -209,8 +209,8 @@ function open(input::IO)
 end
 
 function read_block_header(input_decoder::BinaryDecoder)
-    block_count = decodeLong(input_decoder)
-    num_bytes = decodeLong(input_decoder)
+    block_count = decode_long(input_decoder)
+    num_bytes = decode_long(input_decoder)
     block_count 
 end
 

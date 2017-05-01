@@ -11,24 +11,24 @@ export Encoder,
        BinaryDecoder,
        DatumWriter,
        DatumReader,
-       encodeNull,
-       encodeBoolean,
-       encodeInt,
-       encodeLong,
-       encodeFloat,
-       encodeDouble,
-       encodeByte,
-       encodeBytes,
-       encodeString,
-       decodeNull,
-       decodeBoolean,
-       decodeInt,
-       decodeLong,
-       decodeFloat,
-       decodeDouble,
-       decodeByte,
-       decodeBytes,
-       decodeString
+       encode_null,
+       encode_boolean,
+       encode_int,
+       encode_long,
+       encode_float,
+       encode_double,
+       encode_byte,
+       encode_bytes,
+       encode_string,
+       decode_null,
+       decode_boolean,
+       decode_int,
+       decode_long,
+       decode_float,
+       decode_double,
+       decode_byte,
+       decode_bytes,
+       decode_string
 
 abstract Encoder
 abstract Decoder
@@ -49,10 +49,10 @@ end
 
 # Encoders
 
-encodeNull(encoder::BinaryEncoder, value::Void) = 0
-encodeBoolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
+encode_null(encoder::BinaryEncoder, value::Void) = 0
+encode_boolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
 
-function encodeInt(encoder::BinaryEncoder, value::Int32)
+function encode_int(encoder::BinaryEncoder, value::Int32)
     stream = encoder.stream
     bytes_written = 0
     n = (value << 1) $ (value >> 31)
@@ -76,7 +76,7 @@ function encodeInt(encoder::BinaryEncoder, value::Int32)
     bytes_written
 end
 
-function encodeLong(encoder::BinaryEncoder, value::Int64)
+function encode_long(encoder::BinaryEncoder, value::Int64)
     stream = encoder.stream
     bytes_written = 0
     n = (value << 1) $ (value >> 63)
@@ -116,27 +116,27 @@ function encodeLong(encoder::BinaryEncoder, value::Int64)
     bytes_written
 end
 
-function encodeFloat(encoder::BinaryEncoder, value::Float32)
+function encode_float(encoder::BinaryEncoder, value::Float32)
     isnan(value) ? write(encoder.stream, NaN32) : write(encoder.stream, value)
 end
 
-function encodeDouble(encoder::BinaryEncoder, value::Float64) 
+function encode_double(encoder::BinaryEncoder, value::Float64) 
     isnan(value) ? write(encoder.stream, NaN64) : write(encoder.stream, value)
 end
 
-encodeByte(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
-encodeBytes(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream, value)
+encode_byte(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
+encode_bytes(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream, value)
 
-function encodeString(encoder::BinaryEncoder, value::String)
-    encodeLong(encoder, sizeof(value)) + write(encoder.stream, value)
+function encode_string(encoder::BinaryEncoder, value::String)
+    encode_long(encoder, sizeof(value)) + write(encoder.stream, value)
 end
 
 # Decoders
 
-decodeNull(decoder::Decoder) = nothing
-decodeBoolean(decoder::Decoder) = read(decoder.stream, Bool)
+decode_null(decoder::Decoder) = nothing
+decode_boolean(decoder::Decoder) = read(decoder.stream, Bool)
 
-function decodeInt(decoder::Decoder)
+function decode_int(decoder::Decoder)
     stream = decoder.stream
     b = read(stream, UInt8) % Int
     n = b & 0x7F
@@ -154,7 +154,7 @@ function decodeInt(decoder::Decoder)
     (n >>> 1) $ -(n & 1)
 end
 
-function decodeLong(decoder::Decoder)
+function decode_long(decoder::Decoder)
     stream = decoder.stream
     b = read(stream, UInt8) % Int
     n = b & 0x7F
@@ -172,14 +172,14 @@ function decodeLong(decoder::Decoder)
     (n >>> 1) $ -(n & 1)
 end
 
-decodeFloat(decoder::Decoder) = read(decoder.stream, Float32)
-decodeDouble(decoder::Decoder) = read(decoder.stream, Float64)
-decodeByte(decoder::Decoder) = read(decoder.stream, UInt8)
-decodeBytes(decoder::Decoder, nb::Int) = read(decoder.stream, nb)
+decode_float(decoder::Decoder) = read(decoder.stream, Float32)
+decode_double(decoder::Decoder) = read(decoder.stream, Float64)
+decode_byte(decoder::Decoder) = read(decoder.stream, UInt8)
+decode_bytes(decoder::Decoder, nb::Int) = read(decoder.stream, nb)
 
-function decodeString(decoder::Decoder)
-    nb = decodeLong(decoder)
-    String(decodeBytes(decoder, nb))
+function decode_string(decoder::Decoder)
+    nb = decode_long(decoder)
+    String(decode_bytes(decoder, nb))
 end
 
 end

@@ -71,11 +71,11 @@ decoder = BinaryDecoder(buffer)
 @testset "Encoding" begin
     @testset "Integer" for (input, schema, expected) in INT_EXAMPLES
         # Encode the datum
-        bytes_written = encodeInt(encoder, input)
+        bytes_written = encode_int(encoder, input)
 
         # Decode the datum
         seekstart(buffer)
-        output = decodeInt(decoder)
+        output = decode_int(decoder)
 
         # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
@@ -89,11 +89,11 @@ decoder = BinaryDecoder(buffer)
 
     @testset "Long" for (input, schema, expected) in LONG_EXAMPLES
         # Encode the datum
-        bytes_written = encodeLong(encoder, input)
+        bytes_written = encode_long(encoder, input)
 
         # Decode the datum
         seekstart(buffer)
-        output = decodeLong(decoder)
+        output = decode_long(decoder)
 
         # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
@@ -105,11 +105,11 @@ decoder = BinaryDecoder(buffer)
 
     @testset "Float" for (input, schema, expected) in FLOAT_EXAMPLES
         # Encode the datum
-        bytes_written = encodeFloat(encoder, input)
+        bytes_written = encode_float(encoder, input)
 
         # Decode the datum
         seekstart(buffer)
-        output = decodeFloat(decoder)
+        output = decode_float(decoder)
 
         # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
@@ -123,11 +123,11 @@ decoder = BinaryDecoder(buffer)
 
     @testset "Double" for (input, schema, expected) in DOUBLE_EXAMPLES
         # Encode the datum
-        bytes_written = encodeDouble(encoder, input)
+        bytes_written = encode_double(encoder, input)
 
         # Decode the datum
         seekstart(buffer)
-        output = decodeDouble(decoder)
+        output = decode_double(decoder)
 
         # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
@@ -141,11 +141,11 @@ decoder = BinaryDecoder(buffer)
 
     @testset "Boolean" for (input, schema, expected) in BOOLEAN_EXAMPLES
         # Encode the datum
-        bytes_written = encodeBoolean(encoder, input)
+        bytes_written = encode_boolean(encoder, input)
 
         # Decode the datum
         seekstart(buffer)
-        output = decodeBoolean(decoder)
+        output = decode_boolean(decoder)
 
         # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
@@ -157,11 +157,11 @@ decoder = BinaryDecoder(buffer)
 
     @testset "String" for (input, schema, expected) in STRING_EXAMPLES
         # Encode the datum
-        bytes_written = encodeString(encoder, input)
+        bytes_written = encode_string(encoder, input)
 
         # Decode the datum
         seekstart(buffer)
-        output = decodeString(decoder)
+        output = decode_string(decoder)
 
         # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
