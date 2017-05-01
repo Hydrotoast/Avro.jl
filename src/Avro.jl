@@ -14,16 +14,4 @@ export FileWriter,
        Io,
        Schemas
 
-function create_binary(f::Function, schema::Schemas.Schema, output::IO)
-    file_writer = File.create(schema, output)
-    f(file_writer)
-    File.close(file_writer)
-end
-
-function create_binary(f::Function, schema::Schemas.Schema, output_filename::String)
-    open(output_filename, "w") do file
-        create_binary(f, schema, file)
-    end
-end
-
 end
