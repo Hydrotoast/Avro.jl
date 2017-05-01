@@ -52,14 +52,68 @@ function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
     bytes_written
 end
 
+"""
+Writes a value as a Union if the schema of the value is in the union.
+"""
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value)
     datum_schema = resolve_schema(value)
-    index = Int32(findfirst(schema.schemas, resolve_schema(value)))
+    index = findfirst(schema.schemas, resolve_schema(value)) % Int32
     if index == 0
-        throw(Exception("Schema not found in union: Schemas.NULL"))
+        throw(Exception("Schema not found in union: $datum_schema"))
     end
-    encode_int(encoder, Int32(index - 1)) + write(encoder, schema.schemas[index], value)
+    union_tag = index - one(index)
+    encode_int(encoder, union_tag) + write(encoder, schema.schemas[index], value)
 end
+
+# Generic readers
+
+read(decoder::Decoder, schema::NullSchema) = decode_null(decoder)
+read(decoder::Decoder, schema::BooleanSchema) = decode_boolean(decoder)
+read(decoder::Decoder, schema::IntSchema) = decode_int(decoder)
+read(decoder::Decoder, schema::LongSchema) = decode_long(decoder)
+read(decoder::Decoder, schema::FloatSchema) = decode_float(decoder)
+read(decoder::Decoder, schema::DoubleSchema) = decode_double(decoder)
+read(decoder::Decoder, schema::BytesSchema) = decode_bytes(decoder)
+read(decoder::Decoder, schema::StringSchema) = decode_string(decoder)
+
+"""
+Reads array of Avro objects into generic instances.
+"""
+function read(decoder::Decoder, schema::ArraySchema)
+    n = decode_long(decoder)
+    result = Array(Any, n)
+    for i in 1:n
+        result[i] = read(decoder, schema.items)
+    end
+    decode_byte(decoder)
+    result
+end
+
+"""
+Read maps of Avro objects into generic instances.
+"""
+function read(decoder::Decoder, schema::MapSchema)
+    n = decode_long(decoder)
+    result = Dict{String, Any}()
+    for i in 1:n
+        key = decode_string(decoder)
+        value = read(decoder, schema.values)
+        result[key] = value
+    end
+    decode_byte(decoder)
+    result
+end
+
+"""
+Read unions of Avro objects into generic instances.
+"""
+function read(decoder::Decoder, schema::UnionSchema)
+    union_tag = decode_int(decoder)
+    schema = schema.schemas[union_tag + 1]
+    read(decoder, schema)
+end
+
+# Generic implementations for derived types
 
 """
 Contains data for Avro records.
@@ -147,53 +201,7 @@ function read(decoder::Decoder, schema::FixedSchema)
     GenericFixed(schema, decode_bytes(decoder, schema.size))
 end
 
-# Generic readers
-
-read(decoder::Decoder, schema::NullSchema) = decode_null(decoder)
-read(decoder::Decoder, schema::BooleanSchema) = decode_boolean(decoder)
-read(decoder::Decoder, schema::IntSchema) = decode_int(decoder)
-read(decoder::Decoder, schema::LongSchema) = decode_long(decoder)
-read(decoder::Decoder, schema::FloatSchema) = decode_float(decoder)
-read(decoder::Decoder, schema::DoubleSchema) = decode_double(decoder)
-read(decoder::Decoder, schema::BytesSchema) = decode_bytes(decoder)
-read(decoder::Decoder, schema::StringSchema) = decode_string(decoder)
-
-"""
-Reads array of Avro objects into generic instances.
-"""
-function read(decoder::Decoder, schema::ArraySchema)
-    n = decode_long(decoder)
-    result = Array(Any, n)
-    for i in 1:n
-        result[i] = read(decoder, schema.items)
-    end
-    decode_byte(decoder)
-    result
-end
-
-"""
-Read maps of Avro objects into generic instances.
-"""
-function read(decoder::Decoder, schema::MapSchema)
-    n = decode_long(decoder)
-    result = Dict{String, Any}()
-    for i in 1:n
-        key = decode_string(decoder)
-        value = read(decoder, schema.values)
-        result[key] = value
-    end
-    decode_byte(decoder)
-    result
-end
-
-"""
-Read unions of Avro objects into generic instances.
-"""
-function read(decoder::Decoder, schema::UnionSchema)
-    index = decode_int(decoder)
-    schema = schema.schemas[index + 1]
-    read(decoder, schema)
-end
+# Utilities for generic implementations
 
 resolve_schema(::Void) = Schemas.NULL
 resolve_schema(::Bool) = Schemas.BOOLEAN
@@ -208,6 +216,6 @@ resolve_schema(::Dict) = MapSchema
 resolve_schema(datum::GenericRecord) = datum.schema
 resolve_schema(datum::GenericEnumSymbol) = datum.schema
 resolve_schema(datum::GenericFixed) = datum.schema
-resolve_schema(::Any) = throw("Unknown datum type")
+resolve_schema(::Any) = throw(Exception("Unknown datum type"))
 
 end
