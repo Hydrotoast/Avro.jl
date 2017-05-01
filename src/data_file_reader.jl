@@ -43,7 +43,7 @@ function open(input::IO)
 
     # Parse the schema from the metadata
     schema = Schemas.parse(meta[META_SCHEMA_KEY])
-    codec = meta[META_CODEC_KEY]
+    codec = get(meta, META_CODEC_KEY, "null")
 
     DataReader(input_decoder, schema, codec, sync_marker)
 end
