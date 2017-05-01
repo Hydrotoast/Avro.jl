@@ -1,5 +1,7 @@
 module FileWriter
 
+import Base.close
+
 using Avro.FileCommon
 using Avro.Generic
 using Avro.Io

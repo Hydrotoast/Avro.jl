@@ -92,7 +92,7 @@ getindex(record::GenericRecord, i::Int) = record.values[i]
 function write(encoder::Encoder, schema::RecordSchema, datum::GenericRecord)
     bytes_written = 0
     for field in schema.fields
-        bytes_written += write(encoder, field.schema, datum[field.position + 1])
+        bytes_written += write(encoder, field.schema, get(datum, field.position))
     end
     bytes_written
 end
