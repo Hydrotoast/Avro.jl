@@ -1,5 +1,15 @@
 # Using Avro
 
+[![Build Status](https://travis-ci.org/Hydrotoast/Avro.jl.svg?branch=master)](https://travis-ci.org/Hydrotoast/Avro.jl)
+
+The Julia implementation of the Apache Avro 1.8.1 specification.
+
+Currently, we support the following features:
+
+- Parsing schemas from JSON specifications in `.avsc`
+- Reading from and writing to Avro container files
+- Generic implementation for instances of Avro values
+
 ## Writing to an Avro File
 
 ```julia
