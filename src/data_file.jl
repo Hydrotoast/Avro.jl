@@ -2,7 +2,7 @@ module DataFile
 
 import Base: open, close
 import Base: start, next, done
-import Base.append!
+import Base.write
 
 using Avro.Schemas
 
@@ -42,7 +42,7 @@ include("data_file_writer.jl")
 include("data_file_reader.jl")
 
 using Avro.DataFile.Writer
-export create, append!, close
+export create, write, close
 
 using Avro.DataFile.Reader
 export open, start, next, done, close

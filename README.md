@@ -52,7 +52,7 @@ users = [
 # Write objects
 file_writer = DataFile.create(schema, output)
 for user in users
-    DataFile.append!(file_writer, user)
+    DataFile.write(file_writer, user)
 end
 DataFile.close(file_writer)
 ```

@@ -24,7 +24,7 @@ records = [
     buffer = IOBuffer()
     file_writer = DataFile.create(TEST_RECORD_SCHEMA, buffer)
     for record in records
-        DataFile.append!(file_writer, record)
+        DataFile.write(file_writer, record)
     end
     DataFile.Writer.write_block(file_writer)
 

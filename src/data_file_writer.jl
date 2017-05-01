@@ -1,7 +1,7 @@
 module Writer
 
 import Base.close
-import Base.append!
+import Base.write
 
 using Avro.DataFile
 using Avro.Generic
@@ -9,7 +9,7 @@ using Avro.Io
 using Avro.Schemas
 
 export create,
-       append!,
+       write,
        close
 
 type DataWriter
@@ -70,7 +70,7 @@ function create(
     file_writer
 end
 
-function append!(file_writer::DataWriter, datum)
+function write(file_writer::DataWriter, datum)
     buffer_encoder = file_writer.buffer_encoder
     schema = file_writer.schema
     
