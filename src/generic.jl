@@ -129,18 +129,18 @@ end
 
 function put(record::GenericRecord, key::Symbol, v)
     field = findfirst(field -> field.name == key, record.schema.fields)
-    record.values[field.position + 1] = v
+    record.values[field.position + one(field.position)] = v
 end
 
-put(record::GenericRecord, v, i::Int) = record[i + 1] = v
+put(record::GenericRecord, v, i::Int) = record[i + one(i)] = v
 setindex!(record::GenericRecord, v, i::Int) = record.values[i] = v
 
 function get(record::GenericRecord, key::Symbol)
     field = findfirst(field -> field.name == key, record.schema.fields)
-    record.values[field.position + 1]
+    record.values[field.position + one(field.position)]
 end
 
-get(record::GenericRecord, i::Int) = record[i + 1]
+get(record::GenericRecord, i::Int) = record[i + one(i)]
 getindex(record::GenericRecord, i::Int) = record.values[i]
 
 function write(encoder::Encoder, schema::RecordSchema, datum::GenericRecord)
@@ -173,7 +173,7 @@ function ==(a::GenericEnumSymbol, b::GenericEnumSymbol)
 end
 
 function write(encoder::Encoder, schema::EnumSchema, datum::GenericEnumSymbol)
-    index = findfirst(schema.symbols, datum.symbol) - 1
+    index = findfirst(schema.symbols, datum.symbol) - one(Int32)
     encode_int(encoder, index % Int32)
 end
 
