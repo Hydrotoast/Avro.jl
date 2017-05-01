@@ -56,21 +56,9 @@ function encode_int(encoder::BinaryEncoder, value::Int32)
     stream = encoder.stream
     bytes_written = 0
     n = (value << 1) $ (value >> 31)
-    if n > 0x7F
+    while n > 0x7F && bytes_written < 4
         bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
         n >>>= 7
-        if n > 0x7F
-            bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-            n >>>= 7
-            if n > 0x7F
-                bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                n >>>= 7
-                if n > 0x7F
-                    bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                    n >>>= 7
-                end
-            end
-        end
     end
     bytes_written += write(stream, n % UInt8)
     bytes_written
@@ -80,37 +68,9 @@ function encode_long(encoder::BinaryEncoder, value::Int64)
     stream = encoder.stream
     bytes_written = 0
     n = (value << 1) $ (value >> 63)
-    if n > 0x7F
+    while n > 0x7F && bytes_written < 8
         bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
         n >>>= 7
-        if n > 0x7F
-            bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-            n >>>= 7
-            if n > 0x7F
-                bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                n >>>= 7
-                if n > 0x7F
-                    bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                    n >>>= 7
-                    if n > 0x7F
-                        bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                        n >>>= 7
-                        if n > 0x7F
-                            bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                            n >>>= 7
-                            if n > 0x7F
-                                bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                                n >>>= 7
-                                if n > 0x7F
-                                    bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-                                    n >>>= 7
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
     end
     bytes_written += write(stream, n % UInt8)
     bytes_written
