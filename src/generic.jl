@@ -52,68 +52,13 @@ function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
     bytes_written
 end
 
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Void)
-    index = findfirst(schema.schemas, Schemas.NULL)
+function write(encoder::Encoder, schema::Schemas.UnionSchema, value)
+    datum_schema = resolve_schema(value)
+    index = Int32(findfirst(schema.schemas, resolve_schema(value)))
     if index == 0
         throw(Exception("Schema not found in union: Schemas.NULL"))
     end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
-end
-
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Bool)
-    index = findfirst(schema.schemas, Schemas.BOOLEAN)
-    if index == 0
-        throw(Exception("Schema not found in union: Schemas.BOOLEAN"))
-    end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
-end
-
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int32)
-    index = findfirst(schema.schemas, Schemas.INT)
-    if index == 0
-        throw(Exception("Schema not found in union: Schemas.INT"))
-    end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
-end
-
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Int64)
-    index = findfirst(schema.schemas, Schemas.LONG)
-    if index == 0
-        throw(Exception("Schema not found in union: Schemas.LONG"))
-    end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
-end
-
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float32)
-    index = findfirst(schema.schemas, Schemas.FLOAT)
-    if index == 0
-        throw(Exception("Schema not found in union: Schemas.FLOAT"))
-    end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
-end
-
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Float64)
-    index = findfirst(schema.schemas, Schemas.DOUBLE)
-    if index == 0
-        throw(Exception("Schema not found in union: Schemas.DOUBLE"))
-    end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
-end
-
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::Vector{UInt8})
-    index = findfirst(schema.schemas, Schemas.BYTES)
-    if index == 0
-        throw(Exception("Schema not found in union: Schemas.BYTES"))
-    end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
-end
-
-function write(encoder::Encoder, schema::Schemas.UnionSchema, value::String)
-    index = findfirst(schema.schemas, Schemas.STRING)
-    if index == 0
-        throw(Exception("Schema not found in union: Schemas.STRING"))
-    end
-    encode_int(encoder, index - 1) + write(encoder, schema.schemas[index], value)
+    encode_int(encoder, Int32(index - 1)) + write(encoder, schema.schemas[index], value)
 end
 
 """
@@ -240,5 +185,20 @@ function read(decoder::Decoder, schema::MapSchema)
     decode_byte(decoder)
     result
 end
+
+resolve_schema(::Void) = Schemas.NULL
+resolve_schema(::Bool) = Schemas.BOOLEAN
+resolve_schema(::Int32) = Schemas.INT
+resolve_schema(::Int64) = Schemas.LONG
+resolve_schema(::Float32) = Schemas.FLOAT
+resolve_schema(::Float64) = Schemas.DOUBLE
+resolve_schema(::Vector{UInt8}) = Schemas.BYTES
+resolve_schema(::String) = Schemas.STRING
+resolve_schema(::Vector) = ArraySchema
+resolve_schema(::Dict) = MapSchema
+resolve_schema(datum::GenericRecord) = datum.schema
+resolve_schema(datum::GenericEnumSymbol) = datum.schema
+resolve_schema(datum::GenericFixed) = datum.schema
+resolve_schema(::Any) = throw("Unknown datum type")
 
 end
