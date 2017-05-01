@@ -339,8 +339,8 @@ end
 """
 An array schema.
 """
-immutable ArraySchema <: Schema
-    items::Schema
+immutable ArraySchema{T <: Schema} <: Schema
+    items::T
 end
 
 """
@@ -354,8 +354,8 @@ end
 """
 A map schema.
 """
-immutable MapSchema <: Schema
-    values::Schema
+immutable MapSchema{T <: Schema} <: Schema
+    values::T
 end
 
 """
