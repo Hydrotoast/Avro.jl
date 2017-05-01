@@ -48,11 +48,11 @@ function create(
         output::IO;
         codec::String = "null",
         sync_marker::Vector{UInt8} = generate_sync_marker(),
-        sync_interval::Int = 256)
+        sync_interval::Integer = 256)
 
     # Initialize the output and buffer encoders
     output_encoder = BinaryEncoder(output)
-    buffer_encoder = BinaryEncoder(IOBuffer(Int(sync_interval * 1.25)))
+    buffer_encoder = BinaryEncoder(IOBuffer())
 
     # Initialize the file writer
     file_writer = DataWriter(
