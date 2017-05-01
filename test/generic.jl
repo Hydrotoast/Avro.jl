@@ -113,18 +113,34 @@ decoder = BinaryDecoder(buffer)
     end
 
     @testset "Array" for (input, schema, expected) in ARRAY_EXAMPLES
+        # Encode the datum
         bytes_written = write(encoder, schema, input)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = read(decoder, schema)
+
+        # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
 
         @test expected == contents
+        @test input == output
         @test length(expected) == bytes_written
     end
 
     @testset "Map" for (input, schema, expected) in MAP_EXAMPLES
+        # Encode the datum
         bytes_written = write(encoder, schema, input)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = read(decoder, schema)
+
+        # Inspect the contents of the buffer
         contents = takebuf_array(buffer)
 
         @test expected == contents
+        @test input == output
         @test length(expected) == bytes_written
     end
 end
