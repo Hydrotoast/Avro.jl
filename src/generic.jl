@@ -57,12 +57,12 @@ Writes a value as a Union if the schema of the value is in the union.
 """
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value)
     datum_schema = resolve_schema(value)
-    index = findfirst(schema.schemas, resolve_schema(value)) % Int32
+    index = findfirst(schema.schemas, resolve_schema(value)) % Int64
     if index == 0
         throw(Exception("Schema not found in union: $datum_schema"))
     end
     union_tag = index - one(index)
-    encode_int(encoder, union_tag) + write(encoder, schema.schemas[index], value)
+    encode_long(encoder, union_tag) + write(encoder, schema.schemas[index], value)
 end
 
 # Generic readers
@@ -108,8 +108,8 @@ end
 Read unions of Avro objects into generic instances.
 """
 function read(decoder::Decoder, schema::UnionSchema)
-    union_tag = decode_int(decoder)
-    schema = schema.schemas[union_tag + 1]
+    union_tag = decode_long(decoder)
+    schema = schema.schemas[union_tag + one(union_tag)]
     read(decoder, schema)
 end
 

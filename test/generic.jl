@@ -58,6 +58,12 @@ const MAP_EXAMPLES =
         )
     ]
 
+const UNION_EXAMPLES = 
+    [
+        (Int64(2), Schemas.UnionSchema([Schemas.LONG, Schemas.NULL]), [0x00, 0x04]),
+        (nothing, Schemas.UnionSchema([Schemas.LONG, Schemas.NULL]), [0x02])
+    ]
+
 
 buffer = IOBuffer()
 encoder = BinaryEncoder(buffer)
@@ -129,6 +135,22 @@ decoder = BinaryDecoder(buffer)
     end
 
     @testset "Map" for (input, schema, expected) in MAP_EXAMPLES
+        # Encode the datum
+        bytes_written = write(encoder, schema, input)
+
+        # Decode the datum
+        seekstart(buffer)
+        output = read(decoder, schema)
+
+        # Inspect the contents of the buffer
+        contents = takebuf_array(buffer)
+
+        @test expected == contents
+        @test input == output
+        @test length(expected) == bytes_written
+    end
+
+    @testset "Union" for (input, schema, expected) in UNION_EXAMPLES
         # Encode the datum
         bytes_written = write(encoder, schema, input)
 
