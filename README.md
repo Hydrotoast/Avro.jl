@@ -14,6 +14,7 @@ Currently, we support the following features:
 
 ```julia
 using Avro
+using Avro.Generic
 
 schema_filename = "user.avsc"
 output_filename = "users.avro"
@@ -21,18 +22,18 @@ output = open(output_filename, "w")
 
 # Parse the schema
 schema = open(schema_filename, "r") do file
-  Avro.parse(readstring(file))
+    Avro.Schemas.parse(readstring(file))
 end
 
 users = [
-  GenericRecord(schema, ["bob", 1])
-  GenericRecord(schema, ["alice", 2])
+    GenericRecord(schema, ["bob", Int32(1), "blue"])
+    GenericRecord(schema, ["alice", Int32(2), "red"])
 ]
 
 # Write objects
 file_writer = FileWriter.create(schema, output)
 for user in users
-  FileWriter.append!(file_writer, user)
+    FileWriter.append!(file_writer, user)
 end
 FileWriter.close(file_writer)
 ```
@@ -47,6 +48,6 @@ input = open(input_filename, "r")
 
 # Read the objects
 for record in FileReader.open(input)
-  println(record)
+    println(record)
 end
 ```
