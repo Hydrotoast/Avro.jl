@@ -1,4 +1,8 @@
-module FileCommon
+module DataFile
+
+import Base: open, close
+import Base: start, next, done
+import Base.append!
 
 using Avro.Schemas
 
@@ -33,5 +37,14 @@ const METADATA_SCHEMA =
             Schemas.Field("sync", 2, SYNC_SCHEMA)
         ]
     )
+
+include("data_file_writer.jl")
+include("data_file_reader.jl")
+
+using Avro.DataFile.Writer
+export create, append!, close
+
+using Avro.DataFile.Reader
+export open, start, next, done, close
 
 end

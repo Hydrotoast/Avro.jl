@@ -1,14 +1,20 @@
-module FileReader
+module Reader
 
 import Base.close
 import Base: open, start, next, done
 
-using Avro.FileCommon
+using Avro.DataFile
 using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
-immutable DataFileReader
+export open,
+       close,
+       start,
+       next,
+       done
+
+immutable DataReader
     input_decoder::BinaryDecoder
     schema::Schemas.Schema
     codec::String
@@ -39,20 +45,18 @@ function open(input::IO)
     schema = Schemas.parse(meta[META_SCHEMA_KEY])
     codec = meta[META_CODEC_KEY]
 
-    DataFileReader(input_decoder, schema, codec, sync_marker)
+    DataReader(input_decoder, schema, codec, sync_marker)
 end
 
-function read_block_header(input_decoder::BinaryDecoder)
-    block_count = decode_long(input_decoder)
-    num_bytes = decode_long(input_decoder)
-    block_count 
+function close(file_reader::DataReader)
+    close(file_reader.input_decoder.stream)
 end
 
-function start(file_reader::DataFileReader)
+function start(file_reader::DataReader)
     read_block_header(file_reader.input_decoder)
 end
 
-function next(file_reader::DataFileReader, state)
+function next(file_reader::DataReader, state)
     block_count = state
     if block_count == 0
         block_count = read_block_header(file_reader.input_decoder)
@@ -61,13 +65,19 @@ function next(file_reader::DataFileReader, state)
     (item, block_count - 1)
 end
 
-function done(file_reader::DataFileReader, state)
+function done(file_reader::DataReader, state)
     block_count = state
     if block_count == 0
         sync = read(file_reader.input_decoder, SYNC_SCHEMA)
         @assert file_reader.sync_marker == sync.bytes
     end
     eof(file_reader.input_decoder.stream)
+end
+
+function read_block_header(input_decoder::BinaryDecoder)
+    block_count = decode_long(input_decoder)
+    num_bytes = decode_long(input_decoder)
+    block_count 
 end
 
 end

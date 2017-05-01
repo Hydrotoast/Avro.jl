@@ -1,13 +1,18 @@
-module FileWriter
+module Writer
 
 import Base.close
+import Base.append!
 
-using Avro.FileCommon
+using Avro.DataFile
 using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
-type DataFileWriter
+export create,
+       append!,
+       close
+
+type DataWriter
     schema::Schemas.Schema
     output_encoder::BinaryEncoder
     buffer_encoder::BinaryEncoder
@@ -21,14 +26,14 @@ type DataFileWriter
     block_count::Int
 end
 
-function DataFileWriter(
+function DataWriter(
         schema::Schemas.Schema,
         output_encoder::BinaryEncoder,
         buffer_encoder::BinaryEncoder,
         codec::String,
         sync_marker::Vector{UInt8},
         sync_interval::Int)
-    DataFileWriter(
+    DataWriter(
         schema,
         output_encoder,
         buffer_encoder,
@@ -50,7 +55,7 @@ function create(
     buffer_encoder = BinaryEncoder(IOBuffer(Int(sync_interval * 1.25)))
 
     # Initialize the file writer
-    file_writer = DataFileWriter(
+    file_writer = DataWriter(
         schema, 
         output_encoder, 
         buffer_encoder, 
@@ -65,7 +70,7 @@ function create(
     file_writer
 end
 
-function append!(file_writer::DataFileWriter, datum)
+function append!(file_writer::DataWriter, datum)
     buffer_encoder = file_writer.buffer_encoder
     schema = file_writer.schema
     
@@ -81,13 +86,13 @@ function append!(file_writer::DataFileWriter, datum)
     end
 end
 
-function close(file_writer::DataFileWriter)
+function close(file_writer::DataWriter)
     write_block(file_writer)
 
     close(file_writer.output_encoder.stream)
 end
 
-function write_block(file_writer::DataFileWriter)
+function write_block(file_writer::DataWriter)
     if file_writer.block_count > 0
         buffer_encoder = file_writer.buffer_encoder
         output_encoder = file_writer.output_encoder
@@ -133,7 +138,7 @@ function generate_header(schema, sync_marker, codec::String)
     )
 end
 
-function write_header(file_writer::DataFileWriter)
+function write_header(file_writer::DataWriter)
     header = generate_header(
         file_writer.schema, 
         file_writer.sync_marker,
