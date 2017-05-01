@@ -10,6 +10,25 @@ Currently, we support the following features:
 - Reading from and writing to Avro container files
 - Generic implementation for instances of Avro values
 
+## User Schema
+
+Consider a simple schema for users.
+
+```json
+{
+    "namespace": "example.avro",
+    "type": "record",
+    "name": "User",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "favorite_number",  "type": ["null", "int"]},
+        {"name": "favorite_color", "type": ["null", "string"]}
+    ]
+}
+```
+
+We use this schema in the examples below.
+
 ## Writing to an Avro File
 
 ```julia
