@@ -22,6 +22,7 @@ export Schema,
        FixedSchema,
        ArraySchema,
        MapSchema,
+       UnionSchema,
        PRIMITIVE_TYPES,
        parse
 

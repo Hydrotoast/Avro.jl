@@ -186,6 +186,15 @@ function read(decoder::Decoder, schema::MapSchema)
     result
 end
 
+"""
+Read unions of Avro objects into generic instances.
+"""
+function read(decoder::Decoder, schema::UnionSchema)
+    index = decode_int(decoder)
+    schema = schema.schemas[index + 1]
+    read(decoder, schema)
+end
+
 resolve_schema(::Void) = Schemas.NULL
 resolve_schema(::Bool) = Schemas.BOOLEAN
 resolve_schema(::Int32) = Schemas.INT
