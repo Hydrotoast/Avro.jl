@@ -38,6 +38,7 @@ const METADATA_SCHEMA =
         ]
     )
 
+include("codec.jl")
 include("data_file_writer.jl")
 include("data_file_reader.jl")
 

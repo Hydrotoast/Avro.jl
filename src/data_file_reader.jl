@@ -4,11 +4,10 @@ import Base.close
 import Base: open, start, next, done
 
 using Avro.DataFile
+using Avro.DataFile.Codecs
 using Avro.Generic
 using Avro.Io
 using Avro.Schemas
-
-using Libz
 
 export open,
        close,
@@ -19,7 +18,7 @@ export open,
 immutable DataReader
     input_decoder::BinaryDecoder
     schema::Schemas.Schema
-    codec::String
+    codec::Codec
     sync_marker::Vector{UInt8}
 end
 
@@ -45,7 +44,7 @@ function open(input::IO)
 
     # Parse the schema from the metadata
     schema = Schemas.parse(meta[META_SCHEMA_KEY])
-    codec = get(meta, META_CODEC_KEY, "null")
+    codec = Codecs.create(get(meta, META_CODEC_KEY, "null"))
 
     DataReader(input_decoder, schema, codec, sync_marker)
 end
@@ -81,10 +80,8 @@ function read_block_header(file_reader::DataReader)
     block_count = decode_long(input_decoder)
     num_bytes = decode_long(input_decoder)
     block_data = decode_bytes(input_decoder, num_bytes)
+    block_data = Codecs.decompress(file_reader.codec, block_data)
 
-    if file_reader.codec == "deflate"
-        block_data = Libz.deflate(block_data)
-    end
 
     buffer_decoder = BinaryDecoder(IOBuffer(block_data))
     buffer_decoder, block_count

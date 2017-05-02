@@ -4,23 +4,22 @@ import Base.close
 import Base.write
 
 using Avro.DataFile
+using Avro.DataFile.Codecs
 using Avro.Generic
 using Avro.Io
 using Avro.Schemas
-
-using Libz
 
 export create,
        write,
        close
 
-type DataWriter
+type DataWriter{CodecName}
     schema::Schemas.Schema
     output_encoder::BinaryEncoder
     buffer_encoder::BinaryEncoder
 
     # Users may modify these settings
-    codec::String
+    codec::Codec{CodecName}
     sync_marker::Vector{UInt8}
     sync_interval::Int
 
@@ -28,11 +27,11 @@ type DataWriter
     block_count::Int
 end
 
-function DataWriter(
+function DataWriter{CodecName}(
         schema::Schemas.Schema,
         output_encoder::BinaryEncoder,
         buffer_encoder::BinaryEncoder,
-        codec::String,
+        codec::Codec{CodecName},
         sync_marker::Vector{UInt8},
         sync_interval::Int)
     DataWriter(
@@ -48,13 +47,14 @@ end
 function create(
         schema::Schemas.Schema, 
         output::IO;
-        codec::String = "null",
+        codec_name::String = "null",
         sync_marker::Vector{UInt8} = generate_sync_marker(),
         sync_interval::Integer = 256)
 
     # Initialize the output and buffer encoders
     output_encoder = BinaryEncoder(output)
     buffer_encoder = BinaryEncoder(IOBuffer())
+    codec = Codecs.create(codec_name)
 
     # Initialize the file writer
     file_writer = DataWriter(
@@ -100,11 +100,10 @@ function write_block(file_writer::DataWriter)
         output_encoder = file_writer.output_encoder
         codec = file_writer.codec
 
-        # Extract the buffer data as bytes and reset the buffer state
+        # Extract the buffer data as bytes, compress the buffer data, and
+        # reset the buffer state
         buffer_data = takebuf_array(buffer_encoder.stream)
-        if codec == "deflate"
-            buffer_data = Libz.inflate(buffer_data)
-        end
+        buffer_data = Codecs.compress(codec, buffer_data)
 
         # Write number of records, the blocks size (bytes), the data, and then
         # the sync marker
@@ -126,17 +125,13 @@ generate_sync_marker() = rand(UInt8, 16)
 """
 Generates a header for an object container file.
 """
-function generate_header(schema, sync_marker, codec::String)
-    if !(codec in VALID_CODECS)
-        throw(Exception("Invalid codec: $codec"))
-    end
-
+function generate_header(schema, sync_marker, codec::Codec)
     GenericRecord(
         METADATA_SCHEMA,
         [
             GenericFixed(MAGIC_SCHEMA, OBJECT_CONTAINER_FILE_MAGIC),
             Dict(
-                META_CODEC_KEY => codec,
+                META_CODEC_KEY => Codecs.name(codec),
                 META_SCHEMA_KEY => string(schema),
             ),
             GenericFixed(SYNC_SCHEMA, sync_marker)
