@@ -8,6 +8,8 @@ using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
+using Libz
+
 export open,
        close,
        start,
@@ -53,20 +55,20 @@ function close(file_reader::DataReader)
 end
 
 function start(file_reader::DataReader)
-    read_block_header(file_reader.input_decoder)
+    read_block_header(file_reader)
 end
 
 function next(file_reader::DataReader, state)
-    block_count = state
+    buffer_decoder, block_count = state
     if block_count == 0
-        block_count = read_block_header(file_reader.input_decoder)
+        buffer_decoder, block_count = read_block_header(file_reader)
     end
-    item = read(file_reader.input_decoder, file_reader.schema)
-    (item, block_count - 1)
+    item = read(buffer_decoder, file_reader.schema)
+    item, (buffer_decoder, block_count - 1)
 end
 
 function done(file_reader::DataReader, state)
-    block_count = state
+    buffer_decoder, block_count = state
     if block_count == 0
         sync = read(file_reader.input_decoder, SYNC_SCHEMA)
         @assert file_reader.sync_marker == sync.bytes
@@ -74,10 +76,18 @@ function done(file_reader::DataReader, state)
     eof(file_reader.input_decoder.stream)
 end
 
-function read_block_header(input_decoder::BinaryDecoder)
+function read_block_header(file_reader::DataReader)
+    input_decoder = file_reader.input_decoder
     block_count = decode_long(input_decoder)
     num_bytes = decode_long(input_decoder)
-    block_count 
+    block_data = decode_bytes(input_decoder, num_bytes)
+
+    if file_reader.codec == "deflate"
+        block_data = Libz.deflate(block_data)
+    end
+
+    buffer_decoder = BinaryDecoder(IOBuffer(block_data))
+    buffer_decoder, block_count
 end
 
 end

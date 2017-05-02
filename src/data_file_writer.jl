@@ -8,6 +8,8 @@ using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
+using Libz
+
 export create,
        write,
        close
@@ -96,9 +98,13 @@ function write_block(file_writer::DataWriter)
     if file_writer.block_count > 0
         buffer_encoder = file_writer.buffer_encoder
         output_encoder = file_writer.output_encoder
+        codec = file_writer.codec
 
         # Extract the buffer data as bytes and reset the buffer state
         buffer_data = takebuf_array(buffer_encoder.stream)
+        if codec == "deflate"
+            buffer_data = Libz.inflate(buffer_data)
+        end
 
         # Write number of records, the blocks size (bytes), the data, and then
         # the sync marker
