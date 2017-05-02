@@ -96,11 +96,11 @@ decode_boolean(decoder::Decoder) = read(decoder.stream, Bool)
 
 function decode_int(decoder::Decoder)
     stream = decoder.stream
-    b = read(stream, UInt8) % Int
+    b = read(stream, UInt8) % Int32
     n = b & 0x7F
     bytes_read = 1
     while b > 0x7F && bytes_read < 5
-        b = read(stream, UInt8) % Int
+        b = read(stream, UInt8) % Int32
         n $= (b & 0x7F) << (7 * bytes_read)
         bytes_read += 1
     end
@@ -114,11 +114,11 @@ end
 
 function decode_long(decoder::Decoder)
     stream = decoder.stream
-    b = read(stream, UInt8) % Int
+    b = read(stream, UInt8) % Int64
     n = b & 0x7F
     bytes_read = 1
     while b > 0x7F && bytes_read < 10
-        b = read(stream, UInt8) % Int
+        b = read(stream, UInt8) % Int64
         n $= (b & 0x7F) << (7 * bytes_read)
         bytes_read += 1
     end
