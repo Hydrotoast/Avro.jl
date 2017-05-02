@@ -80,16 +80,19 @@ read(decoder::Decoder, schema::StringSchema) = decode_string(decoder)
 Reads array of Avro objects into generic instances.
 """
 function read(decoder::Decoder, schema::ArraySchema)
+    result = Any[]
     block_count = decode_long(decoder)
-    if block_count < 0
-        block_size = decode_long(decoder)
-        block_count = -block_count
+    while block_count != 0
+        if block_count < 0
+            block_count = -block_count
+            #  Consume the block_size which is not used
+            decode_long(decoder)
+        end
+        for i in 1:block_count
+            push!(result, read(decoder, schema.items))
+        end
+        block_count = decode_long(decoder)
     end
-    result = Array(Any, block_count)
-    for i in 1:block_count
-        result[i] = read(decoder, schema.items)
-    end
-    decode_byte(decoder)
     result
 end
 
@@ -97,18 +100,21 @@ end
 Read maps of Avro objects into generic instances.
 """
 function read(decoder::Decoder, schema::MapSchema)
-    block_count = decode_long(decoder)
-    if block_count < 0
-        block_size = decode_long(decoder)
-        block_count = -block_count
-    end
     result = Dict{String, Any}()
-    for i in 1:block_count
-        key = decode_string(decoder)
-        value = read(decoder, schema.values)
-        result[key] = value
+    block_count = decode_long(decoder)
+    while block_count != 0
+        if block_count < 0
+            block_count = -block_count
+            #  Consume the block_size which is not used
+            decode_long(decoder)
+        end
+        for i in 1:block_count
+            key = decode_string(decoder)
+            value = read(decoder, schema.values)
+            result[key] = value
+        end
+        block_count = decode_long(decoder)
     end
-    decode_byte(decoder)
     result
 end
 
