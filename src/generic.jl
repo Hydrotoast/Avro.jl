@@ -73,7 +73,7 @@ read(decoder::Decoder, ::IntSchema) = decode_int(decoder)
 read(decoder::Decoder, ::LongSchema) = decode_long(decoder)
 read(decoder::Decoder, ::FloatSchema) = decode_float(decoder)
 read(decoder::Decoder, ::DoubleSchema) = decode_double(decoder)
-read(decoder::Decoder, schema::BytesSchema) = decode_bytes(decoder, schema.size)
+read(decoder::Decoder, ::BytesSchema) = decode_bytes(decoder)
 read(decoder::Decoder, ::StringSchema) = decode_string(decoder)
 
 """
