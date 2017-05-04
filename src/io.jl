@@ -52,26 +52,14 @@ encode_boolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, valu
 
 function encode_int(encoder::BinaryEncoder, value::Int32)
     stream = encoder.stream
-    bytes_written = 0
     n = (value << 1) $ (value >> 31)
-    while n > 0x7F && bytes_written < 4
-        bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-        n >>>= 7
-    end
-    bytes_written += write(stream, n % UInt8)
-    bytes_written
+    _encode_varint(stream, n, 5)
 end
 
 function encode_long(encoder::BinaryEncoder, value::Int64)
     stream = encoder.stream
-    bytes_written = 0
     n = (value << 1) $ (value >> 63)
-    while n > 0x7F && bytes_written < 8
-        bytes_written += write(stream, ((n | 0x80) & 0xFF) % UInt8)
-        n >>>= 7
-    end
-    bytes_written += write(stream, n % UInt8)
-    bytes_written
+    _encode_varint(stream, n, 10)
 end
 
 function encode_float(encoder::BinaryEncoder, value::Float32)
@@ -89,6 +77,18 @@ function encode_string(encoder::BinaryEncoder, value::String)
     encode_long(encoder, sizeof(value)) + write(encoder.stream, value)
 end
 
+function _encode_varint(stream::IO, n::Integer, max_bytes::Int)
+    bytes_written = 0
+    while n > 0x7f && bytes_written < max_bytes
+        bytes_written += write(stream, ((n | 0x80) & 0xff) % UInt8)
+        n >>>= 7
+    end
+    if n > 0x7f
+        throw(Exception("Invalid variable-length integer encoding"))
+    end
+    bytes_written += write(stream, n % UInt8)
+end
+
 # Decoders
 
 decode_null(::Decoder) = nothing
@@ -96,17 +96,7 @@ decode_boolean(decoder::Decoder) = read(decoder.stream, Bool)
 
 function decode_int(decoder::Decoder)
     stream = decoder.stream
-    b = read(stream, UInt8) % Int32
-    n = b & 0x7F
-    bytes_read = 1
-    while b > 0x7F && bytes_read < 5
-        b = read(stream, UInt8) % Int32
-        n $= (b & 0x7F) << (7 * bytes_read)
-        bytes_read += 1
-    end
-    if b > 0x7F
-        throw("Invalid int encoding")
-    end
+    n = _decode_varint(stream, 5)
 
     # Return the results in two's-complement
     (n >>> 1) $ -(n & 1)
@@ -114,17 +104,7 @@ end
 
 function decode_long(decoder::Decoder)
     stream = decoder.stream
-    b = read(stream, UInt8) % Int64
-    n = b & 0x7F
-    bytes_read = 1
-    while b > 0x7F && bytes_read < 10
-        b = read(stream, UInt8) % Int64
-        n $= (b & 0x7F) << (7 * bytes_read)
-        bytes_read += 1
-    end
-    if b > 0x7F
-        throw("Invalid int encoding")
-    end
+    n = _decode_varint(stream, 10)
 
     # Return the results in two's-complement
     (n >>> 1) $ -(n & 1)
@@ -138,6 +118,21 @@ decode_bytes(decoder::Decoder, nb::Int) = read(decoder.stream, nb)
 function decode_string(decoder::Decoder)
     nb = decode_long(decoder)
     String(decode_bytes(decoder, nb))
+end
+
+function _decode_varint(stream::IO, max_bytes::Integer)
+    b = read(stream, UInt8) % Int64
+    n = b & 0x7f
+    bytes_read = 1
+    while b > 0x7f && bytes_read < max_bytes
+        b = read(stream, UInt8) % Int64
+        n $= (b & 0x7f) << (7 * bytes_read)
+        bytes_read += 1
+    end
+    if b > 0x7f
+        throw(Exception("Invalid variable-length integer encoding"))
+    end
+    n
 end
 
 end
