@@ -73,7 +73,6 @@ end
 
 ## TODO
 
-- `deflate` codec. See [Libz](https://github.com/BioJulia/Libz.jl).
 - Schema validation
 - Schema default values
 - Code generation from schemas
