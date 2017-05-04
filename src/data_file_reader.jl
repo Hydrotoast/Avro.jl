@@ -1,7 +1,7 @@
-module Reader
+module Readers
 
 import Base.close
-import Base: open, start, next, done
+import Base: start, next, done
 
 using Avro.DataFile
 using Avro.DataFile.Codecs
@@ -9,13 +9,13 @@ using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
-export open,
+export wrap,
        close,
        start,
        next,
        done
 
-immutable DataReader
+immutable Reader
     input_decoder::BinaryDecoder
     schema::Schemas.Schema
     codec::Codec
@@ -29,7 +29,7 @@ function read_header(input_decoder::BinaryDecoder)
     read(input_decoder, METADATA_SCHEMA)
 end
 
-function open(input::IO)
+function wrap(input::IO)
     input_decoder = BinaryDecoder(input)
 
     header = read_header(input_decoder)
@@ -46,18 +46,18 @@ function open(input::IO)
     schema = Schemas.parse(meta[META_SCHEMA_KEY])
     codec = Codecs.create(get(meta, META_CODEC_KEY, "null"))
 
-    DataReader(input_decoder, schema, codec, sync_marker)
+    Reader(input_decoder, schema, codec, sync_marker)
 end
 
-function close(file_reader::DataReader)
+function close(file_reader::Reader)
     close(file_reader.input_decoder.stream)
 end
 
-function start(file_reader::DataReader)
+function start(file_reader::Reader)
     read_block_header(file_reader)
 end
 
-function next(file_reader::DataReader, state)
+function next(file_reader::Reader, state)
     buffer_decoder, block_count = state
     if block_count == 0
         buffer_decoder, block_count = read_block_header(file_reader)
@@ -66,7 +66,7 @@ function next(file_reader::DataReader, state)
     item, (buffer_decoder, block_count - 1)
 end
 
-function done(file_reader::DataReader, state)
+function done(file_reader::Reader, state)
     buffer_decoder, block_count = state
     if block_count == 0
         sync = read(file_reader.input_decoder, SYNC_SCHEMA)
@@ -75,7 +75,7 @@ function done(file_reader::DataReader, state)
     eof(file_reader.input_decoder.stream)
 end
 
-function read_block_header(file_reader::DataReader)
+function read_block_header(file_reader::Reader)
     input_decoder = file_reader.input_decoder
     block_count = decode_long(input_decoder)
     num_bytes = decode_long(input_decoder)

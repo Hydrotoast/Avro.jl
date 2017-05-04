@@ -42,11 +42,10 @@ include("codec.jl")
 include("data_file_writer.jl")
 include("data_file_reader.jl")
 
-using Avro.DataFile.Writer
-using Avro.DataFile.Reader
+using Avro.DataFile.Writers
+using Avro.DataFile.Readers
 
-export create, 
-       open,
+export wrap, 
        close,
        write,
        start,

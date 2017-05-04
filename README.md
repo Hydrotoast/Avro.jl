@@ -50,7 +50,7 @@ users = [
 ]
 
 # Write objects
-file_writer = DataFile.create(schema, output)
+file_writer = DataFile.Writers.wrap(schema, output)
 for user in users
     DataFile.write(file_writer, user)
 end
@@ -66,7 +66,7 @@ input_filename = "users.avro"
 input = open(input_filename, "r")
 
 # Read the objects
-for record in DataFile.open(input)
+for record in DataFile.Readers.wrap(input)
     println(record)
 end
 ```

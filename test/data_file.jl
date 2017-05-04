@@ -23,11 +23,11 @@ records = [
 
 @testset "File reading and writing" begin
     buffer = IOBuffer()
-    file_writer = DataFile.create(TEST_RECORD_SCHEMA, buffer; sync_interval = 2)
+    file_writer = DataFile.Writers.wrap(TEST_RECORD_SCHEMA, buffer; sync_interval = 2)
     for record in records
-        DataFile.write(file_writer, record)
+        DataFile.Writers.write(file_writer, record)
     end
-    DataFile.Writer.write_block(file_writer)
+    DataFile.Writers.write_block(file_writer)
 
     contents = takebuf_array(buffer)
     @test contents[1:4] == Avro.DataFile.OBJECT_CONTAINER_FILE_MAGIC
@@ -44,7 +44,7 @@ records = [
 
     read_buffer = IOBuffer(contents)
     read_records = GenericRecord[]
-    for record in DataFile.open(read_buffer)
+    for record in DataFile.Readers.wrap(read_buffer)
         push!(read_records, record)
     end
     @test records == read_records

@@ -1,4 +1,4 @@
-module Writer
+module Writers
 
 import Base.close
 import Base.write
@@ -9,11 +9,11 @@ using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
-export create,
+export wrap,
        write,
        close
 
-type DataWriter{CodecName}
+type Writer{CodecName}
     schema::Schemas.Schema
     output_encoder::BinaryEncoder
     buffer_encoder::BinaryEncoder
@@ -27,14 +27,14 @@ type DataWriter{CodecName}
     block_count::Int
 end
 
-function DataWriter{CodecName}(
+function Writer{CodecName}(
         schema::Schemas.Schema,
         output_encoder::BinaryEncoder,
         buffer_encoder::BinaryEncoder,
         codec::Codec{CodecName},
         sync_marker::Vector{UInt8},
         sync_interval::Int)
-    DataWriter(
+    Writer(
         schema,
         output_encoder,
         buffer_encoder,
@@ -44,7 +44,7 @@ function DataWriter{CodecName}(
         0)
 end
 
-function create(
+function wrap(
         schema::Schemas.Schema, 
         output::IO;
         codec_name::String = "null",
@@ -57,7 +57,7 @@ function create(
     codec = Codecs.create(codec_name)
 
     # Initialize the file writer
-    file_writer = DataWriter(
+    file_writer = Writer(
         schema, 
         output_encoder, 
         buffer_encoder, 
@@ -72,7 +72,7 @@ function create(
     file_writer
 end
 
-function write(file_writer::DataWriter, datum)
+function write(file_writer::Writer, datum)
     buffer_encoder = file_writer.buffer_encoder
     schema = file_writer.schema
     
@@ -88,13 +88,13 @@ function write(file_writer::DataWriter, datum)
     end
 end
 
-function close(file_writer::DataWriter)
+function close(file_writer::Writer)
     write_block(file_writer)
 
     close(file_writer.output_encoder.stream)
 end
 
-function write_block(file_writer::DataWriter)
+function write_block(file_writer::Writer)
     if file_writer.block_count > 0
         buffer_encoder = file_writer.buffer_encoder
         output_encoder = file_writer.output_encoder
@@ -139,7 +139,7 @@ function generate_header(schema, sync_marker, codec::Codec)
     )
 end
 
-function write_header(file_writer::DataWriter)
+function write_header(file_writer::Writer)
     header = generate_header(
         file_writer.schema, 
         file_writer.sync_marker,
