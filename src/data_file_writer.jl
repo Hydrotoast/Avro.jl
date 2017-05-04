@@ -48,7 +48,7 @@ function wrap(
         schema::Schemas.Schema, 
         output::IO;
         codec_name::String = "null",
-        sync_marker::Vector{UInt8} = generate_sync_marker(),
+        sync_marker::Vector{UInt8} = _generate_sync_marker(),
         sync_interval::Integer = 256)
 
     # Initialize the output and buffer encoders
@@ -66,7 +66,7 @@ function wrap(
         sync_interval)
 
     # Write the header
-    write_header(file_writer)
+    _write_header(file_writer)
     
     # Return the file writer
     file_writer
@@ -120,12 +120,12 @@ end
 """
 Generate a 16 byte synchronization marker.
 """
-generate_sync_marker() = rand(UInt8, 16)
+_generate_sync_marker() = rand(UInt8, 16)
 
 """
 Generates a header for an object container file.
 """
-function generate_header(schema, sync_marker, codec::Codec)
+function _generate_header(schema, sync_marker, codec::Codec)
     GenericRecord(
         METADATA_SCHEMA,
         [
@@ -139,8 +139,8 @@ function generate_header(schema, sync_marker, codec::Codec)
     )
 end
 
-function write_header(file_writer::Writer)
-    header = generate_header(
+function _write_header(file_writer::Writer)
+    header = _generate_header(
         file_writer.schema, 
         file_writer.sync_marker,
         file_writer.codec)

@@ -22,17 +22,10 @@ immutable Reader
     sync_marker::Vector{UInt8}
 end
 
-"""
-Read the header directly the input decoder.
-"""
-function read_header(input_decoder::BinaryDecoder)
-    read(input_decoder, METADATA_SCHEMA)
-end
-
 function wrap(input::IO)
     input_decoder = BinaryDecoder(input)
 
-    header = read_header(input_decoder)
+    header = _read_header(input_decoder)
     magic = getindex(header, 1)
     meta = getindex(header, 2)
     sync_marker = getindex(header, 3).bytes
@@ -54,13 +47,13 @@ function close(file_reader::Reader)
 end
 
 function start(file_reader::Reader)
-    read_block_header(file_reader)
+    _read_block_header(file_reader)
 end
 
 function next(file_reader::Reader, state)
     buffer_decoder, block_count = state
     if block_count == 0
-        buffer_decoder, block_count = read_block_header(file_reader)
+        buffer_decoder, block_count = _read_block_header(file_reader)
     end
     item = read(buffer_decoder, file_reader.schema)
     item, (buffer_decoder, block_count - 1)
@@ -75,7 +68,14 @@ function done(file_reader::Reader, state)
     eof(file_reader.input_decoder.stream)
 end
 
-function read_block_header(file_reader::Reader)
+"""
+Read the header directly the input decoder.
+"""
+function _read_header(input_decoder::BinaryDecoder)
+    read(input_decoder, METADATA_SCHEMA)
+end
+
+function _read_block_header(file_reader::Reader)
     input_decoder = file_reader.input_decoder
     block_count = decode_long(input_decoder)
     num_bytes = decode_long(input_decoder)
