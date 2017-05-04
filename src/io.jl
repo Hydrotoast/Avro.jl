@@ -53,13 +53,13 @@ encode_boolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, valu
 function encode_int(encoder::BinaryEncoder, value::Int32)
     stream = encoder.stream
     n = (value << 1) $ (value >> 31)
-    _encode_varint(stream, n, 5)
+    _encode_varint(stream, n)
 end
 
 function encode_long(encoder::BinaryEncoder, value::Int64)
     stream = encoder.stream
     n = (value << 1) $ (value >> 63)
-    _encode_varint(stream, n, 10)
+    _encode_varint(stream, n)
 end
 
 function encode_float(encoder::BinaryEncoder, value::Float32)
@@ -77,7 +77,8 @@ function encode_string(encoder::BinaryEncoder, value::String)
     encode_long(encoder, sizeof(value)) + write(encoder.stream, value)
 end
 
-function _encode_varint(stream::IO, n::Integer, max_bytes::Int)
+function _encode_varint{T <: Integer}(stream::IO, n::T)
+    max_bytes = sizeof(T) + ceil(Int, sizeof(T) / 8)
     bytes_written = 0
     while n > 0x7f && bytes_written < max_bytes
         bytes_written += write(stream, ((n | 0x80) & 0xff) % UInt8)
@@ -96,7 +97,7 @@ decode_boolean(decoder::Decoder) = read(decoder.stream, Bool)
 
 function decode_int(decoder::Decoder)
     stream = decoder.stream
-    n = _decode_varint(stream, 5)
+    n = _decode_varint(stream, Int32)
 
     # Return the results in two's-complement
     (n >>> 1) $ -(n & 1)
@@ -104,7 +105,7 @@ end
 
 function decode_long(decoder::Decoder)
     stream = decoder.stream
-    n = _decode_varint(stream, 10)
+    n = _decode_varint(stream, Int64)
 
     # Return the results in two's-complement
     (n >>> 1) $ -(n & 1)
@@ -120,12 +121,13 @@ function decode_string(decoder::Decoder)
     String(decode_bytes(decoder, nb))
 end
 
-function _decode_varint(stream::IO, max_bytes::Integer)
-    b = read(stream, UInt8) % Int64
+function _decode_varint{T <: Integer}(stream::IO, ::Type{T})
+    max_bytes = sizeof(T) + ceil(Int, sizeof(T) / 8)
+    b = read(stream, UInt8) % T
     n = b & 0x7f
     bytes_read = 1
     while b > 0x7f && bytes_read < max_bytes
-        b = read(stream, UInt8) % Int64
+        b = read(stream, UInt8) % T
         n $= (b & 0x7f) << (7 * bytes_read)
         bytes_read += 1
     end
