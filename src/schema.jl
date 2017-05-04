@@ -483,8 +483,8 @@ hash(fullname::FullName) = hash(fullname.value)
 """
 Equality definitions for schemas.
 """
-=={A <: Schema}(::A, b) = false
-=={A <: Schema}(b, ::A) = false
+=={A <: Schema}(::A, ::Any) = false
+=={A <: Schema}(::Any, ::A) = false
 =={A <: PrimitiveSchema}(::A, ::A) = true 
 ==(a::RecordSchema, b::RecordSchema) = a.fullname == b.fullname
 ==(a::EnumSchema, b::EnumSchema) = a.fullname == b.fullname && a.symbols == b.symbols

@@ -47,7 +47,7 @@ end
 
 # Encoders
 
-encode_null(encoder::BinaryEncoder, value::Void) = 0
+encode_null(::BinaryEncoder, ::Void) = 0
 encode_boolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
 
 function encode_int(encoder::BinaryEncoder, value::Int32)
@@ -91,7 +91,7 @@ end
 
 # Decoders
 
-decode_null(decoder::Decoder) = nothing
+decode_null(::Decoder) = nothing
 decode_boolean(decoder::Decoder) = read(decoder.stream, Bool)
 
 function decode_int(decoder::Decoder)

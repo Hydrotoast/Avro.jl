@@ -15,15 +15,15 @@ export GenericRecord,
 
 # Generic writers
 
-write(encoder::Encoder, schema::NullSchema, value::Void) = encode_null(encoder, value)
-write(encoder::Encoder, schema::BooleanSchema, value::Bool) = encode_boolean(encoder, value)
-write(encoder::Encoder, schema::IntSchema, value::Int32) = encode_int(encoder, value)
-write(encoder::Encoder, schema::LongSchema, value::Int64) = encode_long(encoder, value)
-write(encoder::Encoder, schema::FloatSchema, value::Float32) = encode_float(encoder, value)
-write(encoder::Encoder, schema::DoubleSchema, value::Float64) = encode_double(encoder, value)
-write(encoder::Encoder, schema::BytesSchema, value::UInt8) = encode_byte(encoder, value)
-write(encoder::Encoder, schema::BytesSchema, value::Vector{UInt8}) = encode_bytes(encoder, value)
-write(encoder::Encoder, schema::StringSchema, value::String) = encode_string(encoder, value)
+write(encoder::Encoder, ::NullSchema, value::Void) = encode_null(encoder, value)
+write(encoder::Encoder, ::BooleanSchema, value::Bool) = encode_boolean(encoder, value)
+write(encoder::Encoder, ::IntSchema, value::Int32) = encode_int(encoder, value)
+write(encoder::Encoder, ::LongSchema, value::Int64) = encode_long(encoder, value)
+write(encoder::Encoder, ::FloatSchema, value::Float32) = encode_float(encoder, value)
+write(encoder::Encoder, ::DoubleSchema, value::Float64) = encode_double(encoder, value)
+write(encoder::Encoder, ::BytesSchema, value::UInt8) = encode_byte(encoder, value)
+write(encoder::Encoder, ::BytesSchema, value::Vector{UInt8}) = encode_bytes(encoder, value)
+write(encoder::Encoder, ::StringSchema, value::String) = encode_string(encoder, value)
 
 """
 Writes an array of Avro objects if there is a 
@@ -67,14 +67,14 @@ end
 
 # Generic readers
 
-read(decoder::Decoder, schema::NullSchema) = decode_null(decoder)
-read(decoder::Decoder, schema::BooleanSchema) = decode_boolean(decoder)
-read(decoder::Decoder, schema::IntSchema) = decode_int(decoder)
-read(decoder::Decoder, schema::LongSchema) = decode_long(decoder)
-read(decoder::Decoder, schema::FloatSchema) = decode_float(decoder)
-read(decoder::Decoder, schema::DoubleSchema) = decode_double(decoder)
+read(decoder::Decoder, ::NullSchema) = decode_null(decoder)
+read(decoder::Decoder, ::BooleanSchema) = decode_boolean(decoder)
+read(decoder::Decoder, ::IntSchema) = decode_int(decoder)
+read(decoder::Decoder, ::LongSchema) = decode_long(decoder)
+read(decoder::Decoder, ::FloatSchema) = decode_float(decoder)
+read(decoder::Decoder, ::DoubleSchema) = decode_double(decoder)
 read(decoder::Decoder, schema::BytesSchema) = decode_bytes(decoder, schema.size)
-read(decoder::Decoder, schema::StringSchema) = decode_string(decoder)
+read(decoder::Decoder, ::StringSchema) = decode_string(decoder)
 
 """
 Reads array of Avro objects into generic instances.
@@ -187,12 +187,13 @@ function ==(a::GenericEnumSymbol, b::GenericEnumSymbol)
 end
 
 function write(encoder::Encoder, schema::EnumSchema, datum::GenericEnumSymbol)
-    index = findfirst(schema.symbols, datum.symbol) - one(Int32)
-    encode_int(encoder, index % Int32)
+    symbol_index = findfirst(schema.symbols, datum.symbol) - one(Int32)
+    encode_int(encoder, symbol_index % Int32)
 end
 
 function read(decoder::Decoder, schema::EnumSchema)
-    GenericEnumSymbol(schema, schema.symbols[decode_int(decoder) + 1])
+    symbol_index = decode_int(decoder)
+    GenericEnumSymbol(schema, schema.symbols[symbol_index + one(symbol_index)])
 end
 
 """
@@ -208,6 +209,7 @@ function ==(a::GenericFixed, b::GenericFixed)
 end
 
 function write(encoder::Encoder, schema::FixedSchema, datum::GenericFixed)
+    @assert schema.size == length(datum.bytes)
     encode_bytes(encoder, datum.bytes)
 end
 

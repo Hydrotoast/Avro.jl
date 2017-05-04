@@ -43,9 +43,14 @@ include("data_file_writer.jl")
 include("data_file_reader.jl")
 
 using Avro.DataFile.Writer
-export create, write, close
-
 using Avro.DataFile.Reader
-export open, start, next, done, close
+
+export create, 
+       open,
+       close,
+       write,
+       start,
+       next,
+       done
 
 end
