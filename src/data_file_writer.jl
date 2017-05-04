@@ -109,8 +109,8 @@ function write_block(file_writer::Writer)
         # the sync marker
         encode_long(output_encoder, file_writer.block_count)
         encode_long(output_encoder, length(buffer_data))
-        encode_bytes(output_encoder, buffer_data)
-        encode_bytes(output_encoder, file_writer.sync_marker)
+        encode_fixed(output_encoder, buffer_data)
+        encode_fixed(output_encoder, file_writer.sync_marker)
 
         # Reset the block counter
         file_writer.block_count = 0

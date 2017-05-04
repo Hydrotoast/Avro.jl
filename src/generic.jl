@@ -210,11 +210,11 @@ end
 
 function write(encoder::Encoder, schema::FixedSchema, datum::GenericFixed)
     @assert schema.size == length(datum.bytes)
-    encode_bytes(encoder, datum.bytes)
+    encode_fixed(encoder, datum.bytes)
 end
 
 function read(decoder::Decoder, schema::FixedSchema)
-    GenericFixed(schema, decode_bytes(decoder, schema.size))
+    GenericFixed(schema, decode_fixed(decoder, schema.size))
 end
 
 # Utilities for generic implementations

@@ -17,6 +17,7 @@ export Encoder,
        encode_double,
        encode_byte,
        encode_bytes,
+       encode_fixed,
        encode_string,
        decode_null,
        decode_boolean,
@@ -26,6 +27,7 @@ export Encoder,
        decode_double,
        decode_byte,
        decode_bytes,
+       decode_fixed,
        decode_string
 
 abstract Encoder
@@ -71,7 +73,12 @@ function encode_double(encoder::BinaryEncoder, value::Float64)
 end
 
 encode_byte(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
-encode_bytes(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream, value)
+function encode_bytes(encoder::BinaryEncoder, value::Vector{UInt8})
+    encode_long(encoder, length(value))
+    write(encoder.stream, value)
+end
+
+encode_fixed(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.stream, value)
 
 function encode_string(encoder::BinaryEncoder, value::String)
     encode_long(encoder, sizeof(value)) + write(encoder.stream, value)
@@ -114,11 +121,17 @@ end
 decode_float(decoder::Decoder) = read(decoder.stream, Float32)
 decode_double(decoder::Decoder) = read(decoder.stream, Float64)
 decode_byte(decoder::Decoder) = read(decoder.stream, UInt8)
-decode_bytes(decoder::Decoder, nb::Int) = read(decoder.stream, nb)
+
+function decode_bytes(decoder::Decoder)
+    nb = decode_long(decoder)
+    read(decoder.stream, nb)
+end
+
+decode_fixed(decoder::Decoder, nb::Integer) = read(decoder.stream, nb)
 
 function decode_string(decoder::Decoder)
     nb = decode_long(decoder)
-    String(decode_bytes(decoder, nb))
+    String(decode_fixed(decoder, nb))
 end
 
 function _decode_varint{T <: Integer}(stream::IO, ::Type{T})

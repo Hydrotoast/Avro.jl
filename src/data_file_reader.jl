@@ -79,7 +79,7 @@ function _read_block_header(file_reader::Reader)
     input_decoder = file_reader.input_decoder
     block_count = decode_long(input_decoder)
     num_bytes = decode_long(input_decoder)
-    block_data = decode_bytes(input_decoder, num_bytes)
+    block_data = decode_fixed(input_decoder, num_bytes)
     block_data = Codecs.decompress(file_reader.codec, block_data)
 
 
