@@ -1,9 +1,5 @@
 module DataFile
 
-import Base: open, close
-import Base: start, next, done
-import Base.write
-
 using Avro.Schemas
 
 export VALID_CODECS,
@@ -44,12 +40,5 @@ include("data_file_reader.jl")
 
 using Avro.DataFile.Writers
 using Avro.DataFile.Readers
-
-export wrap, 
-       close,
-       write,
-       start,
-       next,
-       done
 
 end
