@@ -52,17 +52,8 @@ end
 encode_null(::BinaryEncoder, ::Void) = 0
 encode_boolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
 
-function encode_int(encoder::BinaryEncoder, value::Int32)
-    stream = encoder.stream
-    n = (value << 1) $ (value >> 31)
-    _encode_varint(stream, n)
-end
-
-function encode_long(encoder::BinaryEncoder, value::Int64)
-    stream = encoder.stream
-    n = (value << 1) $ (value >> 63)
-    _encode_varint(stream, n)
-end
+encode_int(encoder::BinaryEncoder, value::Int32) = _encode_varint(encoder.stream, _encode_zigzag(value))
+encode_long(encoder::BinaryEncoder, value::Int64) = _encode_varint(encoder.stream, _encode_zigzag(value))
 
 function encode_float(encoder::BinaryEncoder, value::Float32)
     isnan(value) ? write(encoder.stream, NaN32) : write(encoder.stream, value)
@@ -73,6 +64,7 @@ function encode_double(encoder::BinaryEncoder, value::Float64)
 end
 
 encode_byte(encoder::BinaryEncoder, value::UInt8) = write(encoder.stream, value)
+
 function encode_bytes(encoder::BinaryEncoder, value::Vector{UInt8})
     encode_long(encoder, length(value))
     write(encoder.stream, value)
@@ -82,6 +74,11 @@ encode_fixed(encoder::BinaryEncoder, value::Vector{UInt8}) = write(encoder.strea
 
 function encode_string(encoder::BinaryEncoder, value::String)
     encode_long(encoder, sizeof(value)) + write(encoder.stream, value)
+end
+
+function _encode_zigzag{T <: Integer}(n::T)
+	num_bits = sizeof(T) * 8
+	(n << 1) $ (n >> (num_bits - 1))
 end
 
 function _encode_varint{T <: Integer}(stream::IO, n::T)
@@ -102,24 +99,12 @@ end
 decode_null(::Decoder) = nothing
 decode_boolean(decoder::Decoder) = read(decoder.stream, Bool)
 
-function decode_int(decoder::Decoder)
-    stream = decoder.stream
-    n = _decode_varint(stream, Int32)
-
-    # Return the results in two's-complement
-    (n >>> 1) $ -(n & 1)
-end
-
-function decode_long(decoder::Decoder)
-    stream = decoder.stream
-    n = _decode_varint(stream, Int64)
-
-    # Return the results in two's-complement
-    (n >>> 1) $ -(n & 1)
-end
+decode_int(decoder::Decoder) = _decode_zigzag(_decode_varint(decoder.stream, Int32))
+decode_long(decoder::Decoder) = _decode_zigzag(_decode_varint(decoder.stream, Int64))
 
 decode_float(decoder::Decoder) = read(decoder.stream, Float32)
 decode_double(decoder::Decoder) = read(decoder.stream, Float64)
+
 decode_byte(decoder::Decoder) = read(decoder.stream, UInt8)
 
 function decode_bytes(decoder::Decoder)
@@ -133,6 +118,8 @@ function decode_string(decoder::Decoder)
     nb = decode_long(decoder)
     String(decode_fixed(decoder, nb))
 end
+
+_decode_zigzag(n::Integer) = (n >>> 1) $ -(n & 1)
 
 function _decode_varint{T <: Integer}(stream::IO, ::Type{T})
     max_bytes = sizeof(T) + ceil(Int, sizeof(T) / 8)
