@@ -79,7 +79,7 @@ decoder = BinaryDecoder(buffer)
         output = read(decoder, input.schema)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
@@ -95,7 +95,7 @@ decoder = BinaryDecoder(buffer)
         output = read(decoder, input.schema)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
@@ -111,7 +111,7 @@ decoder = BinaryDecoder(buffer)
         output = read(decoder, input.schema)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
@@ -127,7 +127,7 @@ decoder = BinaryDecoder(buffer)
         output = read(decoder, schema)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
@@ -143,7 +143,7 @@ decoder = BinaryDecoder(buffer)
         output = read(decoder, schema)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
@@ -159,7 +159,7 @@ decoder = BinaryDecoder(buffer)
         output = read(decoder, schema)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output

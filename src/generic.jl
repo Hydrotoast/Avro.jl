@@ -167,7 +167,7 @@ end
 
 function read(decoder::Decoder, schema::RecordSchema)
     n = length(schema.fields)
-    values = Array(Any, n)
+    values = Array{Any}(n)
     for i in 1:n
         values[i] = read(decoder, schema.fields[i].schema)
     end

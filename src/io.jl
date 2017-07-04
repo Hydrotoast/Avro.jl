@@ -30,8 +30,8 @@ export Encoder,
        decode_fixed,
        decode_string
 
-abstract Encoder
-abstract Decoder
+abstract type Encoder end;
+abstract type Decoder end;
 
 """
 Writes binary data of builtin and primtive types to an output stream.
@@ -78,7 +78,7 @@ end
 
 function _encode_zigzag{T <: Integer}(n::T)
 	num_bits = sizeof(T) * 8
-	(n << 1) $ (n >> (num_bits - 1))
+	(n << 1) ⊻ (n >> (num_bits - 1))
 end
 
 function _encode_varint{T <: Integer}(stream::IO, n::T)
@@ -119,7 +119,7 @@ function decode_string(decoder::Decoder)
     String(decode_fixed(decoder, nb))
 end
 
-_decode_zigzag(n::Integer) = (n >>> 1) $ -(n & 1)
+_decode_zigzag(n::Integer) = (n >>> 1) ⊻ -(n & 1)
 
 function _decode_varint{T <: Integer}(stream::IO, ::Type{T})
     max_bytes = sizeof(T) + ceil(Int, sizeof(T) / 8)
@@ -128,7 +128,7 @@ function _decode_varint{T <: Integer}(stream::IO, ::Type{T})
     bytes_read = 1
     while b > 0x7f && bytes_read < max_bytes
         b = read(stream, UInt8) % T
-        n $= (b & 0x7f) << (7 * bytes_read)
+        n ⊻= (b & 0x7f) << (7 * bytes_read)
         bytes_read += 1
     end
     if b > 0x7f
