@@ -29,7 +29,7 @@ records = [
     end
     DataFile.Writers.write_block(file_writer)
 
-    contents = takebuf_array(buffer)
+    contents = take!(buffer)
     @test contents[1:4] == Avro.DataFile.OBJECT_CONTAINER_FILE_MAGIC
     # This block should have 2 records with 10 bytes of data
     @test contents[end - 50] == 0x04 # 2 records

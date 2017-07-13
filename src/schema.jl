@@ -74,9 +74,9 @@ end
 """
 The parent of the Avro Schema hierarchy.
 """
-abstract Schema
+abstract type Schema end;
 
-abstract PrimitiveSchema <: Schema
+abstract type PrimitiveSchema <: Schema end;
 
 # Generate the primitive type schemas
 for primitive_type in PRIMITIVE_TYPES
@@ -141,7 +141,7 @@ end
 A schema that can be uniquely identified with a fullname. A fullname is
 comprised of a name and a namespace.
 """
-abstract NamedSchema <: Schema
+abstract type NamedSchema <: Schema end;
 
 """
 Constructs named schemas from a JSON object. The named schema object returned
@@ -295,7 +295,7 @@ function RecordSchema(
 
     # Parse the fields
     json_fields = json_data["fields"]
-    fields = Array(Field, length(json_fields))
+    fields = Array{Field}(length(json_fields))
     for (i, json_field) in enumerate(json_fields)
         fields[i] = Field(json_field, context, i - 1)
     end

@@ -78,13 +78,13 @@ decoder = BinaryDecoder(buffer)
         output = decode_int(decoder)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
         @test length(expected) == bytes_written
 
-        takebuf_array(buffer)
+        take!(buffer)
     end
 
     @testset "Long" for (input, schema, expected) in LONG_EXAMPLES
@@ -96,7 +96,7 @@ decoder = BinaryDecoder(buffer)
         output = decode_long(decoder)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
@@ -112,7 +112,7 @@ decoder = BinaryDecoder(buffer)
         output = decode_float(decoder)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         if !isnan(input)
@@ -130,7 +130,7 @@ decoder = BinaryDecoder(buffer)
         output = decode_double(decoder)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         if !isnan(input)
@@ -148,7 +148,7 @@ decoder = BinaryDecoder(buffer)
         output = decode_boolean(decoder)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test input == output
@@ -164,7 +164,7 @@ decoder = BinaryDecoder(buffer)
         output = decode_string(decoder)
 
         # Inspect the contents of the buffer
-        contents = takebuf_array(buffer)
+        contents = take!(buffer)
 
         @test expected == contents
         @test output == input

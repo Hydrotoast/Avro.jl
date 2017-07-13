@@ -102,7 +102,7 @@ function write_block(file_writer::Writer)
 
         # Extract the buffer data as bytes, compress the buffer data, and
         # reset the buffer state
-        buffer_data = takebuf_array(buffer_encoder.stream)
+        buffer_data = take!(buffer_encoder.stream)
         buffer_data = Codecs.compress(codec, buffer_data)
 
         # Write number of records, the blocks size (bytes), the data, and then
