@@ -1,5 +1,5 @@
 using Avro
-using Base.Test
+using Test
 
 include("schema.jl")
 include("io.jl")

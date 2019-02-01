@@ -4,7 +4,7 @@ using Libz
 
 export Codec
 
-immutable Codec{Name}
+struct Codec{Name}
 end
 
 function create(name::String)

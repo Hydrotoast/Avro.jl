@@ -1,21 +1,14 @@
 module Readers
 
-import Base.close
-import Base: start, next, done
-
 using Avro.DataFile
 using Avro.DataFile.Codecs
 using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
-export wrap,
-       close,
-       start,
-       next,
-       done
+export wrap
 
-immutable Reader
+struct Reader
     input_decoder::BinaryDecoder
     schema::Schemas.Schema
     codec::Codec
@@ -42,7 +35,7 @@ function wrap(input::IO)
     Reader(input_decoder, schema, codec, sync_marker)
 end
 
-function close(file_reader::Reader)
+function Base.close(file_reader::Reader)
     close(file_reader.input_decoder.stream)
 end
 
@@ -67,6 +60,11 @@ function done(file_reader::Reader, state)
     end
     eof(file_reader.input_decoder.stream)
 end
+
+function Base.iterate(file_reader::Reader, state)
+    done(file_reader, state) ? nothing : next(file_reader, state)
+end
+Base.iterate(file_reader::Reader) = iterate(file_reader, start(file_reader))
 
 """
 Read the header directly the input decoder.

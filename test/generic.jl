@@ -1,12 +1,12 @@
 module GenericTest
 
-using Base.Test
+using Test
 
 using Avro.Schemas
 using Avro.Io
 using Avro.Generic
 
-const TEST_RECORD_SCHEMA = 
+const TEST_RECORD_SCHEMA =
     Schemas.RecordSchema(
         Schemas.FullName("test"),
         [
@@ -40,16 +40,16 @@ const FIXED_EXAMPLES =
         (GenericFixed(TEST_FIXED_SCHEMA, [0xAA, 0xBB]), [0xAA, 0xBB])
     ]
 
-const ARRAY_EXAMPLES = 
+const ARRAY_EXAMPLES =
     [
         (
-            Int64[3, 27], 
-            Schemas.ArraySchema(Schemas.LONG), 
+            Int64[3, 27],
+            Schemas.ArraySchema(Schemas.LONG),
             [0x04, 0x06, 0x36, 0x00]
         )
     ]
 
-const MAP_EXAMPLES = 
+const MAP_EXAMPLES =
     [
         (
             Dict{String, Int64}("bar" => 27, "foo" => 3),
@@ -58,7 +58,7 @@ const MAP_EXAMPLES =
         )
     ]
 
-const UNION_EXAMPLES = 
+const UNION_EXAMPLES =
     [
         (Int64(2), Schemas.UnionSchema([Schemas.LONG, Schemas.NULL]), [0x00, 0x04]),
         (nothing, Schemas.UnionSchema([Schemas.LONG, Schemas.NULL]), [0x02])

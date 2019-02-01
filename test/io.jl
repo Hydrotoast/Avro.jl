@@ -2,15 +2,15 @@ module IoTest
 
 using Avro.Io
 using Avro.Schemas
-using Base.Test
+using Test
 
-const BOOLEAN_EXAMPLES = 
+const BOOLEAN_EXAMPLES =
     [
         (true, Schemas.BOOLEAN, [0x01]),
         (false, Schemas.BOOLEAN, [0x00]),
     ]
 
-const INT_EXAMPLES = 
+const INT_EXAMPLES =
     [
         (Int32(0), Schemas.INT, [0x00]),
         (Int32(-1), Schemas.INT, [0x01]),
@@ -23,7 +23,7 @@ const INT_EXAMPLES =
         (Int32(-8193), Schemas.INT, [0x81, 0x80, 0x01]),
     ]
 
-const LONG_EXAMPLES = 
+const LONG_EXAMPLES =
     [
         (Int64(0), Schemas.LONG, [0x00]),
         (Int64(-1), Schemas.LONG, [0x01]),
@@ -58,7 +58,7 @@ const DOUBLE_EXAMPLES =
         (NaN64, Schemas.DOUBLE, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x7F]),
     ]
 
-const STRING_EXAMPLES = 
+const STRING_EXAMPLES =
     [
         ("foo", Schemas.STRING, [0x06, 0x66, 0x6f, 0x6f])
         ("", Schemas.STRING, [0x00])

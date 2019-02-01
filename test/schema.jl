@@ -1,5 +1,7 @@
 using Avro.Schemas
 
+using Test
+
 const PRIMITIVE_EXAMPLES = [
     ["\"$type_name\"" for type_name in PRIMITIVE_TYPES];
     ["{\"type\": \"$type_name\"}" for type_name in PRIMITIVE_TYPES]
@@ -69,31 +71,31 @@ FIXED_EXAMPLES = [
 
 @testset "Parsing schemas" begin
     @testset "Primitive" for example in PRIMITIVE_EXAMPLES
-        Avro.parse(example)
+        Schemas.parse(example)
     end
 
     @testset "Record" for example in RECORD_EXAMPLES
-        Avro.parse(example)
+        Schemas.parse(example)
     end
 
     @testset "Enum" for example in ENUM_EXAMPLES
-        Avro.parse(example)
+        Schemas.parse(example)
     end
 
     @testset "Array" for example in ARRAY_EXAMPLES
-        Avro.parse(example)
+        Schemas.parse(example)
     end
 
     @testset "Map" for example in MAP_EXAMPLES
-        Avro.parse(example)
+        Schemas.parse(example)
     end
 
     @testset "Union" for example in UNION_EXAMPLES
-        Avro.parse(example)
+        Schemas.parse(example)
     end
 
     @testset "Fixed" for example in FIXED_EXAMPLES
-        Avro.parse(example)
+        Schemas.parse(example)
     end
 end
 
@@ -110,7 +112,7 @@ end
 
         @test Schemas.LONG == LongSchema()
         @test Schemas.LONG == Schemas.PrimitiveSchema("long")
-        
+
         @test Schemas.FLOAT == FloatSchema()
         @test Schemas.FLOAT == Schemas.PrimitiveSchema("float")
 
