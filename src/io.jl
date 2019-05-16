@@ -36,20 +36,20 @@ abstract type Decoder end;
 """
 Writes binary data of builtin and primtive types to an output stream.
 """
-immutable BinaryEncoder <: Encoder
+struct BinaryEncoder <: Encoder
     stream::IO
 end
 
 """
 Reads data of simple and primitive types from an input stream.
 """
-immutable BinaryDecoder <: Decoder
+struct BinaryDecoder <: Decoder
     stream::IO
 end
 
 # Encoders
 
-encode_null(::BinaryEncoder, ::Void) = 0
+encode_null(::BinaryEncoder, ::Nothing) = 0
 encode_boolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
 
 encode_int(encoder::BinaryEncoder, value::Int32) = _encode_varint(encoder.stream, _encode_zigzag(value))
@@ -59,7 +59,7 @@ function encode_float(encoder::BinaryEncoder, value::Float32)
     isnan(value) ? write(encoder.stream, NaN32) : write(encoder.stream, value)
 end
 
-function encode_double(encoder::BinaryEncoder, value::Float64) 
+function encode_double(encoder::BinaryEncoder, value::Float64)
     isnan(value) ? write(encoder.stream, NaN64) : write(encoder.stream, value)
 end
 
@@ -76,12 +76,12 @@ function encode_string(encoder::BinaryEncoder, value::String)
     encode_long(encoder, sizeof(value)) + write(encoder.stream, value)
 end
 
-function _encode_zigzag{T <: Integer}(n::T)
+function _encode_zigzag(n::T) where T <: Integer
 	num_bits = sizeof(T) * 8
 	(n << 1) ⊻ (n >> (num_bits - 1))
 end
 
-function _encode_varint{T <: Integer}(stream::IO, n::T)
+function _encode_varint(stream::IO, n::T) where T <: Integer
     max_bytes = sizeof(T) + ceil(Int, sizeof(T) / 8)
     bytes_written = 0
     while n > 0x7f && bytes_written < max_bytes
@@ -121,7 +121,7 @@ end
 
 _decode_zigzag(n::Integer) = (n >>> 1) ⊻ -(n & 1)
 
-function _decode_varint{T <: Integer}(stream::IO, ::Type{T})
+function _decode_varint(stream::IO, ::Type{T}) where T <: Integer
     max_bytes = sizeof(T) + ceil(Int, sizeof(T) / 8)
     b = read(stream, UInt8) % T
     n = b & 0x7f

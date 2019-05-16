@@ -15,7 +15,7 @@ export GenericRecord,
 
 # Generic writers
 
-write(encoder::Encoder, ::NullSchema, value::Void) = encode_null(encoder, value)
+write(encoder::Encoder, ::NullSchema, value::Nothing) = encode_null(encoder, value)
 write(encoder::Encoder, ::BooleanSchema, value::Bool) = encode_boolean(encoder, value)
 write(encoder::Encoder, ::IntSchema, value::Int32) = encode_int(encoder, value)
 write(encoder::Encoder, ::LongSchema, value::Int64) = encode_long(encoder, value)
@@ -26,10 +26,10 @@ write(encoder::Encoder, ::BytesSchema, value::Vector{UInt8}) = encode_bytes(enco
 write(encoder::Encoder, ::StringSchema, value::String) = encode_string(encoder, value)
 
 """
-Writes an array of Avro objects if there is a 
+Writes an array of Avro objects if there is a
 write(Encoder, typeof(ArraySchema.items), T) method.
 """
-function write{T}(encoder::Encoder, schema::ArraySchema, value::Vector{T})
+function write(encoder::Encoder, schema::ArraySchema, value::Vector{T}) where T
     bytes_written = encode_long(encoder, Int64(length(value)))
     for item in value
         bytes_written += write(encoder, schema.items, item)
@@ -39,10 +39,10 @@ function write{T}(encoder::Encoder, schema::ArraySchema, value::Vector{T})
 end
 
 """
-Writes a map of Avro objects if there is a 
+Writes a map of Avro objects if there is a
 write(Encoder, typeof(MapSchema.values), T) method.
 """
-function write{T}(encoder::Encoder, schema::MapSchema, value::Dict{String, T})
+function write(encoder::Encoder, schema::MapSchema, value::Dict{String, T}) where T
     bytes_written = encode_long(encoder, Int64(length(value)))
     for (k, v) in value
         bytes_written += encode_string(encoder, k)
@@ -57,7 +57,7 @@ Writes a value as a Union if the schema of the value is in the union.
 """
 function write(encoder::Encoder, schema::Schemas.UnionSchema, value)
     datum_schema = resolve_schema(value)
-    index = findfirst(schema.schemas, resolve_schema(value)) % Int64
+    index = findfirst(isequal(datum_schema), schema.schemas) % Int64
     if index == 0
         throw(Exception("Schema not found in union: $datum_schema"))
     end
@@ -132,12 +132,12 @@ end
 """
 Contains data for Avro records.
 """
-immutable GenericRecord
+struct GenericRecord
     schema::RecordSchema
     values::Vector{Any}
 end
 
-function ==(a::GenericRecord, b::GenericRecord) 
+function ==(a::GenericRecord, b::GenericRecord)
     a.schema == b.schema && a.values == b.values
 end
 
@@ -167,7 +167,7 @@ end
 
 function read(decoder::Decoder, schema::RecordSchema)
     n = length(schema.fields)
-    values = Array{Any}(n)
+    values = Array{Any}(undef, n)
     for i in 1:n
         values[i] = read(decoder, schema.fields[i].schema)
     end
@@ -177,17 +177,17 @@ end
 """
 An enum symbol.
 """
-immutable GenericEnumSymbol
+struct GenericEnumSymbol
     schema::EnumSchema
     symbol::String
 end
 
-function ==(a::GenericEnumSymbol, b::GenericEnumSymbol) 
+function ==(a::GenericEnumSymbol, b::GenericEnumSymbol)
     a.schema == b.schema && a.symbol == b.symbol
 end
 
 function write(encoder::Encoder, schema::EnumSchema, datum::GenericEnumSymbol)
-    symbol_index = findfirst(schema.symbols, datum.symbol) - one(Int32)
+    symbol_index = findfirst(isequal(datum.symbol), schema.symbols) - one(Int32)
     encode_int(encoder, symbol_index % Int32)
 end
 
@@ -199,12 +199,12 @@ end
 """
 Contains data for Avro fixed objects.
 """
-immutable GenericFixed
+struct GenericFixed
     schema::FixedSchema
     bytes::Vector{UInt8}
 end
 
-function ==(a::GenericFixed, b::GenericFixed) 
+function ==(a::GenericFixed, b::GenericFixed)
     a.schema == b.schema && a.bytes == b.bytes
 end
 
@@ -219,7 +219,7 @@ end
 
 # Utilities for generic implementations
 
-resolve_schema(::Void) = Schemas.NULL
+resolve_schema(::Nothing) = Schemas.NULL
 resolve_schema(::Bool) = Schemas.BOOLEAN
 resolve_schema(::Int32) = Schemas.INT
 resolve_schema(::Int64) = Schemas.LONG

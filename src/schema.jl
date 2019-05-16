@@ -67,7 +67,7 @@ end
 """
 Exception during Schema parsing.
 """
-immutable SchemaParseException <: Exception
+struct SchemaParseException <: Exception
     message::String
 end
 
@@ -82,7 +82,7 @@ abstract type PrimitiveSchema <: Schema end;
 for primitive_type in PRIMITIVE_TYPES
     classname = Symbol(capitalize(primitive_type), "Schema")
     @eval begin
-        immutable $(classname) <: PrimitiveSchema
+        struct $(classname) <: PrimitiveSchema
         end
     end
     @eval const $(Symbol(uppercase(primitive_type))) = $(classname)()
@@ -113,7 +113,7 @@ end
 """
 A fully qualified name in Avro.
 """
-immutable FullName
+struct FullName
     value::String
 end
 
@@ -132,7 +132,7 @@ end
 A context object for maintaining state during schema parsing. The the state
 includes the current namespace and a dictionary of the parsed schemas.
 """
-type ParseContext
+mutable struct ParseContext
     space::String
     schemas::Dict{FullName, Schema}
 end
@@ -218,7 +218,7 @@ end
 """
 A field of a record schema.
 """
-immutable Field
+struct Field
     name::String
     position::Int
     schema::Schema
@@ -262,7 +262,7 @@ end
 """
 A record schema.
 """
-type RecordSchema <: NamedSchema
+mutable struct RecordSchema <: NamedSchema
     fullname::FullName
     fields::Vector{Field}
     doc::String
@@ -295,7 +295,7 @@ function RecordSchema(
 
     # Parse the fields
     json_fields = json_data["fields"]
-    fields = Array{Field}(length(json_fields))
+    fields = Array{Field}(undef, length(json_fields))
     for (i, json_field) in enumerate(json_fields)
         fields[i] = Field(json_field, context, i - 1)
     end
@@ -307,7 +307,7 @@ end
 """
 An enum schema.
 """
-immutable EnumSchema <: NamedSchema
+struct EnumSchema <: NamedSchema
     fullname::FullName
     symbols::Vector{String}
     doc::String # optional
@@ -340,7 +340,7 @@ end
 """
 An array schema.
 """
-immutable ArraySchema{T <: Schema} <: Schema
+struct ArraySchema{T <: Schema} <: Schema
     items::T
 end
 
@@ -355,7 +355,7 @@ end
 """
 A map schema.
 """
-immutable MapSchema{T <: Schema} <: Schema
+struct MapSchema{T <: Schema} <: Schema
     values::T
 end
 
@@ -370,7 +370,7 @@ end
 """
 A union schema.
 """
-immutable UnionSchema <: Schema
+struct UnionSchema <: Schema
     schemas::Vector{Schema}
 end
 
@@ -385,7 +385,7 @@ end
 """
 A fixed schema.
 """
-immutable FixedSchema <: NamedSchema
+struct FixedSchema <: NamedSchema
     fullname::FullName
     size::Int
     doc::String
@@ -474,7 +474,7 @@ function parse(json_string::String)
     parse_schema(json_data, context)
 end
 
-""" 
+"""
 Equality definitions for fullnames.
 """
 ==(fullname1::FullName, fullname2::FullName) = fullname1.value == fullname2.value
@@ -484,7 +484,7 @@ hash(fullname::FullName) = hash(fullname.value)
 Equality definitions for schemas.
 """
 ==(::Schema, ::Schema) = false
-=={A <: PrimitiveSchema}(::A, ::A) = true 
+==(::A, ::A) where A <: PrimitiveSchema = true
 ==(a::RecordSchema, b::RecordSchema) = a.fullname == b.fullname
 ==(a::EnumSchema, b::EnumSchema) = a.fullname == b.fullname && a.symbols == b.symbols
 ==(a::ArraySchema, b::ArraySchema) = a.items == b.items

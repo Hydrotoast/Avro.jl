@@ -1,10 +1,11 @@
 module Codecs
 
 using Libz
+import Snappy
 
 export Codec
 
-immutable Codec{Name}
+struct Codec{Name}
 end
 
 function create(name::String)
@@ -12,11 +13,14 @@ function create(name::String)
         Codec{:deflate}()
     elseif name == "null"
         Codec{:null}()
+    elseif name == "snappy"
+        Codec{:snappy}()
     end
 end
 
 name(::Codec{:null}) = "null"
 name(::Codec{:deflate}) = "deflate"
+name(::Codec{:snappy}) = "snappy"
 
 compress(::Codec{:null}, data) = data
 decompress(::Codec{:null}, data) = data
@@ -30,5 +34,8 @@ function decompress(::Codec{:deflate}, data)
     stream = Libz.ZlibInflateInputStream(data; raw = true, gzip = false)
     read(stream)
 end
+
+compress(::Codec{:snappy}, data) = Snappy.compress(data)
+decompress(::Codec{:snappy}, data) = Snappy.uncompress(data)
 
 end

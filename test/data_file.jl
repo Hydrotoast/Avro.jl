@@ -5,7 +5,7 @@ using Avro.DataFile
 using Avro.Schemas
 using Avro.Generic
 
-using Base.Test
+using Test
 
 const TEST_RECORD_SCHEMA = Schemas.RecordSchema(
     Schemas.FullName("test"),

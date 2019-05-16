@@ -1,19 +1,14 @@
 module Writers
 
-import Base.close
-import Base.write
-
 using Avro.DataFile
 using Avro.DataFile.Codecs
 using Avro.Generic
 using Avro.Io
 using Avro.Schemas
 
-export wrap,
-       write,
-       close
+export wrap
 
-type Writer{CodecName}
+mutable struct Writer{CodecName}
     schema::Schemas.Schema
     output_encoder::BinaryEncoder
     buffer_encoder::BinaryEncoder
@@ -27,13 +22,13 @@ type Writer{CodecName}
     block_count::Int
 end
 
-function Writer{CodecName}(
+function Writer(
         schema::Schemas.Schema,
         output_encoder::BinaryEncoder,
         buffer_encoder::BinaryEncoder,
         codec::Codec{CodecName},
         sync_marker::Vector{UInt8},
-        sync_interval::Int)
+        sync_interval::Int) where CodecName
     Writer(
         schema,
         output_encoder,
@@ -45,7 +40,7 @@ function Writer{CodecName}(
 end
 
 function wrap(
-        schema::Schemas.Schema, 
+        schema::Schemas.Schema,
         output::IO;
         codec_name::String = "null",
         sync_marker::Vector{UInt8} = _generate_sync_marker(),
@@ -58,24 +53,24 @@ function wrap(
 
     # Initialize the file writer
     file_writer = Writer(
-        schema, 
-        output_encoder, 
-        buffer_encoder, 
-        codec, 
-        sync_marker, 
+        schema,
+        output_encoder,
+        buffer_encoder,
+        codec,
+        sync_marker,
         sync_interval)
 
     # Write the header
     _write_header(file_writer)
-    
+
     # Return the file writer
     file_writer
 end
 
-function write(file_writer::Writer, datum)
+function Base.write(file_writer::Writer, datum)
     buffer_encoder = file_writer.buffer_encoder
     schema = file_writer.schema
-    
+
     # Write the datum to the buffer encoder using given schema
     write(buffer_encoder, schema, datum)
 
@@ -88,7 +83,7 @@ function write(file_writer::Writer, datum)
     end
 end
 
-function close(file_writer::Writer)
+function Base.close(file_writer::Writer)
     write_block(file_writer)
 
     close(file_writer.output_encoder.stream)
@@ -141,7 +136,7 @@ end
 
 function _write_header(file_writer::Writer)
     header = _generate_header(
-        file_writer.schema, 
+        file_writer.schema,
         file_writer.sync_marker,
         file_writer.codec)
 
