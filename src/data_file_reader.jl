@@ -45,7 +45,7 @@ end
 
 function next(file_reader::Reader, state)
     buffer_decoder, block_count = state
-    if block_count == 0
+    while !done(file_reader, (buffer_decoder, block_count) && block_count == 0
         buffer_decoder, block_count = _read_block_header(file_reader)
     end
     item = read(buffer_decoder, file_reader.schema)
