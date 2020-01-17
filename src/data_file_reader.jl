@@ -43,28 +43,33 @@ function start(file_reader::Reader)
     _read_block_header(file_reader)
 end
 
+# The invariant maintained by the iterator is that block_count = 0 only at the end of the
+# stream. If block_count does drop to 0, we verify the 16 sync bytes and then read block
+# headers until one with size > 0 is found.
 function next(file_reader::Reader, state)
     buffer_decoder, block_count = state
-    if block_count == 0
-        buffer_decoder, block_count = _read_block_header(file_reader)
-    end
+    @assert block_count != 0
     item = read(buffer_decoder, file_reader.schema)
-    item, (buffer_decoder, block_count - 1)
-end
-
-function done(file_reader::Reader, state)
-    buffer_decoder, block_count = state
+    block_count -= 1
     if block_count == 0
         sync = read(file_reader.input_decoder, SYNC_SCHEMA)
         @assert file_reader.sync_marker == sync.bytes
+        buffer_decoder, block_count = _read_block_header(file_reader)
     end
-    eof(file_reader.input_decoder.stream)
+    item, (buffer_decoder, block_count)
+end
+
+function done(state)
+    decoder, block_count = state
+    block_count == 0
 end
 
 function Base.iterate(file_reader::Reader, state)
-    done(file_reader, state) ? nothing : next(file_reader, state)
+    done(state) ? nothing : next(file_reader, state)
 end
 Base.iterate(file_reader::Reader) = iterate(file_reader, start(file_reader))
+
+Base.IteratorSize(reader::Reader) = Base.SizeUnknown()
 
 """
 Read the header directly the input decoder.
@@ -73,13 +78,25 @@ function _read_header(input_decoder::BinaryDecoder)
     read(input_decoder, METADATA_SCHEMA)
 end
 
+# Always returns block_count > 0, except in the case of eof, when we return (nothing, 0)
+# This allows us to keep the invariant that block_count is always > 0 unless at end of stream.
 function _read_block_header(file_reader::Reader)
-    input_decoder = file_reader.input_decoder
-    block_count = decode_long(input_decoder)
-    num_bytes = decode_long(input_decoder)
-    block_data = decode_fixed(input_decoder, num_bytes)
-    block_data = Codecs.decompress(file_reader.codec, block_data)
-
+    block_count = 0
+    block_data = nothing
+    while block_count == 0
+        if (eof(file_reader.input_decoder.stream))
+            return (nothing, 0)
+        end
+        input_decoder = file_reader.input_decoder
+        block_count = decode_long(input_decoder)
+        num_bytes = decode_long(input_decoder)
+        block_data = decode_fixed(input_decoder, num_bytes)
+        block_data = Codecs.decompress(file_reader.codec, block_data)
+        if block_count == 0
+            sync = read(input_decoder, SYNC_SCHEMA)
+            @assert file_reader.sync_marker == sync.bytes
+        end
+    end
 
     buffer_decoder = BinaryDecoder(IOBuffer(block_data))
     buffer_decoder, block_count
