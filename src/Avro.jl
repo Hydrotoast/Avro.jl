@@ -1,14 +1,9 @@
 module Avro
 
-include("common.jl")
+using JSON, FileIO
+
 include("schema.jl")
-include("io.jl")
-include("generic.jl")
+include("encoding.jl")
 include("data_file.jl")
 
-export DataFile,
-       Generic,
-       Io,
-       Schemas
-
-end
+end  # module Avro

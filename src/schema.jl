@@ -1,160 +1,96 @@
-module Schemas
+# schema types
 
-import Base.==
-import Base.fullname
-import Base.hash
-import Base.show
+@enum Ordering Ascending Descending Ignore
 
-using Avro.Common
-using JSON
+const Optional{T} = Union{Missing, T}
+const OptionalTuple{TS} = Tuple{map(x->Optional{x}, TS.types)}
+const Some{T} = NTuple{N, T} where N
 
-export Schema,
-       NullSchema,
-       BooleanSchema,
-       StringSchema,
-       BytesSchema,
-       IntSchema,
-       LongSchema,
-       FloatSchema,
-       DoubleSchema,
-       RecordSchema,
-       EnumSchema,
-       FixedSchema,
-       ArraySchema,
-       MapSchema,
-       UnionSchema,
-       PRIMITIVE_TYPES,
-       parse
+abstract type Schema; end
 
-"""
-The set of builtin types.
-"""
-const PRIMITIVE_TYPES = [
-    "null",
-    "boolean",
-    "int",
-    "long",
-    "float",
-    "double",
-    "bytes",
-    "string"
-    ]
+const PrimitiveTypes = (;:null => Nothing, :boolean => Bool, :int => Int32,
+    :long => Int64, :float => Float32, :double => Float64,
+    :bytes => Vector{UInt8}, :string => String)
 
-"""
-The set of named types.
-"""
-const NAMED_TYPES = [
-    "record",
-    "enum",
-    "fixed"
-    ]
+const PrimativeTypeUnion = Union{values(PrimativeTypes)...}
 
-"""
-Valid types may appear in the `name` field of a JSON object.
-"""
-const VALID_TYPES = [
-    PRIMITIVE_TYPES;
-    NAMED_TYPES;
-    ["array", "map", "union"]
-    ]
+struct PrimitiveSchema{T<:PrimativeTypeUnion} <: Schema; end
 
-function get_required(data::Dict, key::String, error_message::String)
-    get(data, key) do
-        throw(SchemaParseException(string(error_message, ": ", data)))
+valuetype(::Type{PrimativeSchema{T}}) where T = T
+
+for (k, v) in pairs(PrimativeTypes)
+    @eval begin
+        canonicalform(::Type{PrimativeSchema{$v}}) = "\"$(string(k))\""
     end
 end
 
-"""
-Exception during Schema parsing.
-"""
-struct SchemaParseException <: Exception
+struct UnionSchema{N, SS<:NTuple{N, Schema}} <: Schema; end
+
+valuetype(::Type{UnionSchema{N, SS}}) where {N, SS} = Union{map(valuetype, SS.types)...}
+canonicalform(::Type{UnionSchema{N, SS}}) where {N, SS} = "[$(join(map(canonicalform, SS.types), ","))]"
+
+struct ArraySchema{S <: Schema} <: Schema; end
+
+valuetype(::Type{ArraySchema{S}}) where S = Vector{valuetype(S)}
+canonicalform(::Type{ArraySchema{S}}) where S = "{type:\"array\",items:$(canonicalform(S))}"
+
+struct MapSchema{S <: Schema} <: Schema; end
+
+valuetype(::Type{MapSchema{S}}) where S = Dict{Symbol, valuetype(S)}
+canonicalform(::Type{MapSchema{S}}) where S = "{type:\"map\",values:$(canonicalform(S))}"
+
+struct FixedSchema{N, NAME} <: Schema
+    aliases::Some{String}
+end
+
+valuetype(::Type{FixedSchema{N}}) where N = NTuple{N, UInt8}
+canonicalform(::Type{FixedSchema{N, NAME}}) where {N, NAME} = "{name:\"$(string(NAME))\",type:\"fixed\",size:$(Int(N))}"
+
+const ValueTypesTuple{TS} = Tuple{map(valuetype, TS.types)...}
+
+struct RecordSchema{N, NS, SS<:NTuple{N, Schema}, NAME} <: Schema
+    doc::Optional{String}
+    aliases::Some{String}
+    fielddocs::NamedTuple{NS, NTuple{N, Optional{String}}}
+    fielddefaults::NamedTuple{NS, OptionalTuple{ValueTypesTuple{SS}}}
+    fieldaliases::NamedTuple{NS, NTuple{N, Some{String}}}
+    fieldordering::NamedTuple{NS, NTuple{N, Optional{Ordering}}}
+end
+
+valuetype(::Type{RecordSchema{N, NS, SS}}) where {N, NS, SS} = NamedTuple{NS, ValueTypesTuple{SS}}
+canonicalform(name, schema::Type{<:Schema}) = "{name:\"$(string(name))\",type:$(canonicalform(schema))}"
+canonicalform(::Type{RecordSchema{N, NS, SS}}) where {N, NS, SS} = "{name:\"$(string(NAME))\",type:\"record\",fields:[$(join(map(canonicalform, NS, SS.types), ","))]}"
+
+struct EnumSchema{NS, NAME} <: Schema
+    doc::Optional{String}
+    aliases::Some{String}
+    default::Optional{Symbol}
+end
+
+valuetype(::Type{EnumSchema}) = Symbol
+canonicalform(::Type{EnumSchema{NS, NAME}}) where {NS, NAME} = "{name:\"$(string(NAME))\",type:\"enum\",symbols:[\"$(join(map(string, NS), "\",\""))\"]}"
+
+
+# schema parsing
+
+struct ParseError <: Exception
     message::String
 end
+ParseError(msg, data) = ParseError("$msg: $data")
 
-"""
-The parent of the Avro Schema hierarchy.
-"""
-abstract type Schema end;
-
-abstract type PrimitiveSchema <: Schema end;
-
-# Generate the primitive type schemas
-for primitive_type in PRIMITIVE_TYPES
-    classname = Symbol(capitalize(primitive_type), "Schema")
-    @eval begin
-        struct $(classname) <: PrimitiveSchema
-        end
-    end
-    @eval const $(Symbol(uppercase(primitive_type))) = $(classname)()
+struct ParseContext
+    namespace::String
+    schemas::Dict{String, Type}
 end
 
-function PrimitiveSchema(typename::String)
-    if typename == "null"
-        return NULL
-    elseif typename == "boolean"
-        return BOOLEAN
-    elseif typename == "string"
-        return STRING
-    elseif typename == "bytes"
-        return BYTES
-    elseif typename == "int"
-        return INT
-    elseif typename == "long"
-        return LONG
-    elseif typename == "float"
-        return FLOAT
-    elseif typename == "double"
-        return DOUBLE
-    else
-        throw(Exception("Invalid schema typename"))
-    end
+function fullname(ctx::ParseContext, name::String)
+    ('.' in name || len(ctx.namespace) == 0) ? name : "$namespace.$name"
 end
 
-"""
-A fully qualified name in Avro.
-"""
-struct FullName
-    value::String
+function parse(json::Dict, ctx::ParseContext)
 end
 
-"""
-Construct a fullname from a name and space.
-"""
-function FullName(name::String, space::String)
-    if '.' in name
-        FullName(name)
-    else
-        FullName(space == "" ? name : string(space, '.', name))
-    end
-end
-
-"""
-A context object for maintaining state during schema parsing. The the state
-includes the current namespace and a dictionary of the parsed schemas.
-"""
-mutable struct ParseContext
-    space::String
-    schemas::Dict{FullName, Schema}
-end
-
-"""
-A schema that can be uniquely identified with a fullname. A fullname is
-comprised of a name and a namespace.
-"""
-abstract type NamedSchema <: Schema end;
-
-"""
-Constructs named schemas from a JSON object. The named schema object returned
-depends on the type provided by the JSON object.
-
-    "fixed" | "error" => FixedSchema
-    "enum" => EnumSchema
-    "record" => RecordSchema
-
-If a named schema with the specified name has already been parsed, the
-previously parsed schema object is returned from the parse context.
-"""
-function NamedSchema(json_data::Dict, context::ParseContext, typename::String)
+function parse_named_schema(json::Dict, ctx::ParseContext, typename::String)
     # Push the current namespace onto the stack
     parent_space = context.space
 
@@ -196,7 +132,6 @@ end
 """
 An enum of possible orders.
 """
-@enum Order Ascending Descending Ignore
 
 """
 Construct an Order object from a name. This constructor is case-insensitive. If
@@ -432,7 +367,7 @@ function parse_schema(json_data::Dict, context::ParseContext)
             MapSchema(json_data, context)
         end
     else
-        throw(SchemaParseException("Schema not yet supported: $typename"))
+        throw(ParseError("Schema not yet supported", typename))
     end
 end
 
@@ -477,41 +412,41 @@ end
 """
 Equality definitions for fullnames.
 """
-==(fullname1::FullName, fullname2::FullName) = fullname1.value == fullname2.value
-hash(fullname::FullName) = hash(fullname.value)
+Base.==(fullname1::FullName, fullname2::FullName) = fullname1.value == fullname2.value
+Base.hash(fullname::FullName) = hash(fullname.value)
 
 """
 Equality definitions for schemas.
 """
-==(::Schema, ::Schema) = false
-==(::A, ::A) where A <: PrimitiveSchema = true
-==(a::RecordSchema, b::RecordSchema) = a.fullname == b.fullname
-==(a::EnumSchema, b::EnumSchema) = a.fullname == b.fullname && a.symbols == b.symbols
-==(a::ArraySchema, b::ArraySchema) = a.items == b.items
-==(a::MapSchema, b::MapSchema) = a.values == b.values
-==(a::UnionSchema, b::UnionSchema) = a.schemas == b.schemas
-==(a::FixedSchema, b::FixedSchema) = a.fullname == b.fullname && a.size == b.size
+Base.==(::Schema, ::Schema) = false
+Base.==(::A, ::A) where A <: PrimitiveSchema = true
+Base.==(a::RecordSchema, b::RecordSchema) = a.fullname == b.fullname
+Base.==(a::EnumSchema, b::EnumSchema) = a.fullname == b.fullname && a.symbols == b.symbols
+Base.==(a::ArraySchema, b::ArraySchema) = a.items == b.items
+Base.==(a::MapSchema, b::MapSchema) = a.values == b.values
+Base.==(a::UnionSchema, b::UnionSchema) = a.schemas == b.schemas
+Base.==(a::FixedSchema, b::FixedSchema) = a.fullname == b.fullname && a.size == b.size
 
 """
 Show definitions for schemas to show them as JSON.
 """
-show(io::IO, name::FullName) = write(io, "\"$(name.value)\"")
+Base.show(io::IO, name::FullName) = write(io, "\"$(name.value)\"")
 
 for primitive_type in PRIMITIVE_TYPES
     primitive_json = "\"$primitive_type\""
-    classname = Symbol(capitalize(primitive_type), "Schema")
+    classname = Symbol(uppercasefirst(primitive_type), "Schema")
     @eval begin
-        show(io::IO, ::$classname) = print(io, $primitive_json)
+        Base.show(io::IO, ::$classname) = print(io, $primitive_json)
     end
 end
 
-function show(io::IO, field::Field)
+function Base.show(io::IO, field::Field)
     write(io, "{\"name\":\"$(field.name)\",\"type\":")
     show(io, field.schema)
     write(io, "}")
 end
 
-function show(io::IO, schema::RecordSchema)
+function Base.show(io::IO, schema::RecordSchema)
     write(io, "{\"name\":")
     show(io, schema.fullname)
     write(io, ",\"type\":\"record\",\"fields\":[")
@@ -523,7 +458,7 @@ function show(io::IO, schema::RecordSchema)
     write(io, "]}")
 end
 
-function show(io::IO, schema::EnumSchema)
+function Base.show(io::IO, schema::EnumSchema)
     write(io, "{\"name\":")
     show(io, schema.fullname)
     write(io, ",\"type\":\"enum\",\"symbols\":[")
@@ -531,19 +466,19 @@ function show(io::IO, schema::EnumSchema)
     write(io, "]}")
 end
 
-function show(io::IO, schema::ArraySchema)
+function Base.show(io::IO, schema::ArraySchema)
     write(io, "{type\":\"array\",\"items\":")
     show(io, schema.items)
     write(io, "}")
 end
 
-function show(io::IO, schema::MapSchema)
+function Base.show(io::IO, schema::MapSchema)
     write(io, "{type\":\"map\",\"values\":")
     show(io, schema.values)
     write(io, "}")
 end
 
-function show(io::IO, schema::UnionSchema)
+function Base.show(io::IO, schema::UnionSchema)
     write(io, "[")
     show(io, schema.schemas[1])
     for item in schema.schemas[2:end]
@@ -553,10 +488,8 @@ function show(io::IO, schema::UnionSchema)
     write(io, "]")
 end
 
-function show(io::IO, schema::FixedSchema)
+function Base.show(io::IO, schema::FixedSchema)
     write(io, "{\"name\":")
     show(io, schema.fullname)
     write(io, ",\"type\":\"fixed\",\"size\":$(schema.size)}")
-end
-
 end

@@ -1,14 +1,5 @@
-module Io
-
-import Base.write
-
-using Avro.Common
-using Avro.Schemas
-
-export Encoder,
-       Decoder,
-       BinaryEncoder,
-       BinaryDecoder,
+export BinaryEncoding,
+       JsonEncoding,
        encode_null,
        encode_boolean,
        encode_int,
@@ -30,24 +21,7 @@ export Encoder,
        decode_fixed,
        decode_string
 
-abstract type Encoder end;
-abstract type Decoder end;
-
-"""
-Writes binary data of builtin and primtive types to an output stream.
-"""
-struct BinaryEncoder <: Encoder
-    stream::IO
-end
-
-"""
-Reads data of simple and primitive types from an input stream.
-"""
-struct BinaryDecoder <: Decoder
-    stream::IO
-end
-
-# Encoders
+module BinaryEncoding
 
 encode_null(::BinaryEncoder, ::Nothing) = 0
 encode_boolean(encoder::BinaryEncoder, value::Bool) = write(encoder.stream, value)
@@ -137,4 +111,4 @@ function _decode_varint(stream::IO, ::Type{T}) where T <: Integer
     n
 end
 
-end
+end  # module BinaryEncoding

@@ -20,23 +20,23 @@ mutable struct Writer{CodecName}
 
     # Internal, mutable state
     block_count::Int
-end
 
-function Writer(
-        schema::Schemas.Schema,
-        output_encoder::BinaryEncoder,
-        buffer_encoder::BinaryEncoder,
-        codec::Codec{CodecName},
-        sync_marker::Vector{UInt8},
-        sync_interval::Int) where CodecName
-    Writer(
-        schema,
-        output_encoder,
-        buffer_encoder,
-        codec,
-        sync_marker,
-        sync_interval,
-        0)
+    function Writer(
+            schema::Schemas.Schema,
+            output_encoder::BinaryEncoder,
+            buffer_encoder::BinaryEncoder,
+            codec::Codec{CodecName},
+            sync_marker::Vector{UInt8},
+            sync_interval::Int) where CodecName
+        new(
+            schema,
+            output_encoder,
+            buffer_encoder,
+            codec,
+            sync_marker,
+            sync_interval,
+            0)
+    end
 end
 
 function wrap(
