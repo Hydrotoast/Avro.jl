@@ -66,6 +66,12 @@ function Base.iterate(file_reader::Reader, state)
 end
 Base.iterate(file_reader::Reader) = iterate(file_reader, start(file_reader))
 
+Base.IteratorSize(::Type{Reader}) = Base.SizeUnknown()
+
+Base.IteratorEltype(::Type{Reader}) = Base.HasEltype()
+
+Base.eltype(::Type{Reader}) = GenericRecord
+
 """
 Read the header directly the input decoder.
 """

@@ -44,10 +44,20 @@ records = [
 
     read_buffer = IOBuffer(contents)
     read_records = GenericRecord[]
-    for record in DataFile.Readers.wrap(read_buffer)
+    record_iterator = DataFile.Readers.wrap(read_buffer)
+
+    @test Base.IteratorEltype(record_iterator) == Base.HasEltype()
+    @test eltype(record_iterator) == GenericRecord
+    @test Base.IteratorSize(record_iterator) == Base.SizeUnknown()
+    for record in record_iterator
         push!(read_records, record)
     end
     @test records == read_records
+
+    read_buffer = IOBuffer(contents)
+    record_iterator = DataFile.Readers.wrap(read_buffer)
+    stateful_iterator = Base.Iterators.Stateful(record_iterator)
+    @test popfirst!(stateful_iterator) == records[1]
 end
 
 end
