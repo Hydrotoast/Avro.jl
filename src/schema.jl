@@ -71,6 +71,13 @@ struct SchemaParseException <: Exception
     message::String
 end
 
+struct InvalidPrimitiveSchemaName <: Exception end
+Base.showerror(io, err::InvalidPrimitiveSchemaName) = print(io, "Invalid schema typename")
+
+struct InvalidSchemaOrder <: Exception
+    name::String
+end
+Base.showerror(io, err::InvalidSchemaOrder) = print(io, "Invalid order name: $(err.name)")
 """
 The parent of the Avro Schema hierarchy.
 """
@@ -106,7 +113,7 @@ function PrimitiveSchema(typename::String)
     elseif typename == "double"
         return DOUBLE
     else
-        throw(Exception("Invalid schema typename"))
+        throw(InvalidPrimitiveSchemaName())
     end
 end
 
@@ -211,7 +218,7 @@ function Order(name::String)
     elseif clean_name == "IGNORE"
         Ignore
     else
-        throw(Exception("Invalid order name: $name"))
+        throw(InvalidSchemaOrder(name))
     end
 end
 

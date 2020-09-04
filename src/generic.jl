@@ -11,7 +11,19 @@ export GenericRecord,
        GenericEnumSymbol,
        GenericFixed,
        read,
-       write
+       write,
+       SchemaNotFoundError,
+       UnknownSchema
+
+struct SchemaNotFoundError <: Exception
+    datum_schema
+end
+
+Base.showerror(io, err::SchemaNotFoundError) = print(io, "Schema not found in union: $(err.datum_schema)")
+
+struct UnknownSchema <: Exception end
+
+Base.showerror(io, err::UnknownSchema) = print(io, "Unknown datum type")
 
 # Generic writers
 
@@ -59,7 +71,7 @@ function write(encoder::Encoder, schema::Schemas.UnionSchema, value)
     datum_schema = resolve_schema(value)
     index = findfirst(isequal(datum_schema), schema.schemas) % Int64
     if index == 0
-        throw(Exception("Schema not found in union: $datum_schema"))
+        throw(SchemaNotFoundError(datum_schema))
     end
     union_tag = index - one(index)
     encode_long(encoder, union_tag) + write(encoder, schema.schemas[index], value)
@@ -232,6 +244,6 @@ resolve_schema(::Dict) = MapSchema
 resolve_schema(datum::GenericRecord) = datum.schema
 resolve_schema(datum::GenericEnumSymbol) = datum.schema
 resolve_schema(datum::GenericFixed) = datum.schema
-resolve_schema(::Any) = throw(Exception("Unknown datum type"))
+resolve_schema(::Any) = throw(UnknownSchema())
 
 end
