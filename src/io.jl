@@ -28,7 +28,13 @@ export Encoder,
        decode_byte,
        decode_bytes,
        decode_fixed,
-       decode_string
+       decode_string,
+       InvalidVariableLengthEncoding
+
+
+struct InvalidVariableLengthEncoding <: Exception end
+
+Base.showerror(io, err::InvalidVariableLengthEncoding) = print(io, "Invalid variable-length integer encoding")
 
 abstract type Encoder end;
 abstract type Decoder end;
@@ -89,7 +95,7 @@ function _encode_varint(stream::IO, n::T) where T <: Integer
         n >>>= 7
     end
     if n > 0x7f
-        throw(Exception("Invalid variable-length integer encoding"))
+        throw(InvalidVariableLengthEncoding())
     end
     bytes_written += write(stream, n % UInt8)
 end
@@ -132,7 +138,7 @@ function _decode_varint(stream::IO, ::Type{T}) where T <: Integer
         bytes_read += 1
     end
     if b > 0x7f
-        throw(Exception("Invalid variable-length integer encoding"))
+        throw(InvalidVariableLengthEncoding())
     end
     n
 end
